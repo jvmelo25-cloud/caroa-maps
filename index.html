@@ -4002,6 +4002,10 @@ window.LOGO_CAROA = { dados: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD
   var CONFLITO = { equipe: 'user_id', fichas: 'chave', marcas: 'chave', conferencias: 'chave', arquivos: 'caminho' };
   var ORDEM = ['equipe', 'fichas', 'marcas', 'conferencias'];
   var PREF_DESDE = 'sinc_desde';
+  // o seq que o servidor deu a cada linha que ESTE aparelho mandou: o que voltar
+  // com seq igual ou menor é eco do próprio envio (e pode ser mais velho que o
+  // que já está aqui) — não entra
+  var PREF_ENVIADOS = 'sinc_enviados';
 
   /* Que tipo de falha é esta?
      'sessao'  o login venceu: guarda tudo e pede para entrar de novo
@@ -4035,7 +4039,27 @@ window.LOGO_CAROA = { dados: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD
     var agora = o.agora || function () { return new Date(); };
     var lote = o.lote || 50, limite = o.limite || 500;
     var estado = { pendentes: 0, ultima: null, erro: null, ocupado: false, precisaLogin: false };
-    var contador = 0, relogio = null;
+    var contador = 0, relogio = null, enviados = null, enviadosMudou = false;
+
+    function carregarEnviados() {
+      if (enviados) return Promise.resolve(enviados);
+      return banco.lerPref(PREF_ENVIADOS).then(function (v) { enviados = v || {}; return enviados; });
+    }
+    function guardarEnviados() {
+      if (!enviadosMudou) return Promise.resolve();
+      enviadosMudou = false;
+      return banco.gravarPref(PREF_ENVIADOS, enviados);
+    }
+    function chaveDoEco(tabela, linha) { return tabela + '|' + linha[CONFLITO[tabela] || 'chave']; }
+    /* resp: as linhas que o servidor devolveu ({<coluna do conflito>, seq}) */
+    function anotarEnviados(tabela, resp) {
+      if (!Array.isArray(resp)) return;
+      resp.forEach(function (l) {
+        if (!l || l.seq == null) return;
+        var k = chaveDoEco(tabela, l), s = Number(l.seq);
+        if (!(enviados[k] >= s)) { enviados[k] = s; enviadosMudou = true; }
+      });
+    }
 
     function emitir() { aoMudar(Object.assign({}, estado)); }
     function contarPendentes() {
@@ -4072,7 +4096,8 @@ window.LOGO_CAROA = { dados: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD
       }
 
       function mandarLote(tabela, itens) {
-        return servidor.upsert(tabela, itens.map(function (i) { return i.linha; }), CONFLITO[tabela] || 'chave').then(function () {
+        return servidor.upsert(tabela, itens.map(function (i) { return i.linha; }), CONFLITO[tabela] || 'chave').then(function (resp) {
+          anotarEnviados(tabela, resp);
           return tirar(itens);
         }, function (e) {
           var tipo = classificar(e, false);
@@ -4090,7 +4115,8 @@ window.LOGO_CAROA = { dados: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD
       function mandarArquivo(i) {
         return servidor.enviarArquivo(i.caminho, i.blob, i.tipoMime).then(function () {
           return servidor.upsert('arquivos', [i.registro], CONFLITO.arquivos);
-        }).then(function () {
+        }).then(function (resp) {
+          anotarEnviados('arquivos', resp);
           return tirar([i]);
         }, function (e) {
           var tipo = classificar(e, true);
@@ -4101,7 +4127,7 @@ window.LOGO_CAROA = { dados: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD
         });
       }
 
-      return banco.lerFila().then(function (fila) {
+      return carregarEnviados().then(function () { return banco.lerFila(); }).then(function (fila) {
         var porTabela = {}, tabelas = [];
         fila.forEach(function (i) {
           if (i.tabela === 'arquivo') return;
@@ -4145,13 +4171,13 @@ window.LOGO_CAROA = { dados: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD
         estado.precisaLogin = tipo === 'sessao';
       }).then(function () {
         estado.ocupado = false;
-        return contarPendentes();
-      }).then(function () { return r; });
+        return guardarEnviados();
+      }).then(contarPendentes).then(function () { return r; });
     }
 
     function receber() {
       var aplicados = 0, voltas = 0;
-      return Promise.all([banco.lerPref(PREF_DESDE), banco.lerFila()]).then(function (ini) {
+      return Promise.all([banco.lerPref(PREF_DESDE), banco.lerFila(), carregarEnviados()]).then(function (ini) {
         var desde = Number(ini[0]) || 0;
         var pendentes = {};
         ini[1].forEach(function (i) { pendentes[i.id] = true; });
@@ -4163,6 +4189,12 @@ window.LOGO_CAROA = { dados: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD
               var j = x.j || {};
               var id = x.t === 'arquivos' ? 'arquivo|' + j.caminho : x.t + '|' + j.chave;
               if (pendentes[id]) return;           // a mudança local ainda vai subir: ela vale
+              var eco = chaveDoEco(x.t, j);
+              if (enviados[eco] != null) {
+                if (Number(j.seq) <= enviados[eco]) return;   // eco do próprio envio
+                delete enviados[eco];                           // mudou depois, em outro aparelho
+                enviadosMudou = true;
+              }
               if (!porTabela[x.t]) { porTabela[x.t] = []; ordem.push(x.t); }
               porTabela[x.t].push(j);
             });
@@ -4170,7 +4202,7 @@ window.LOGO_CAROA = { dados: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD
               return p.then(function () { return aplicar(t, porTabela[t]); }).then(function () { aplicados += porTabela[t].length; });
             }, Promise.resolve()).then(function () {
               desde = Number(res && res.ate) || desde;
-              return banco.gravarPref(PREF_DESDE, desde);
+              return banco.gravarPref(PREF_DESDE, desde).then(guardarEnviados);
             }).then(function () {
               if (res && res.mais && voltas < 40) return volta();
             });
@@ -4306,9 +4338,11 @@ window.LOGO_CAROA = { dados: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD
   }
 
   var servidor = {
+    /* devolve [{<coluna do conflito>, seq}]: o motor ignora o eco do próprio envio */
     upsert: function (tabela, linhas, conflito) {
-      return cliente.from(tabela).upsert(linhas, { onConflict: conflito }).then(function (r) {
+      return cliente.from(tabela).upsert(linhas, { onConflict: conflito }).select(conflito + ',seq').then(function (r) {
         if (r.error) throw erroNormal(r.error, r.status);
+        return r.data || [];
       });
     },
     enviarArquivo: function (caminho, blob, tipoMime) {
