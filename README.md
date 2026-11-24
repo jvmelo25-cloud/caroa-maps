@@ -4,7 +4,7 @@ App de campo dos lotes em Dúvida: a ortofoto do pacote (feita pelo botão 📍 
 Vetorizador Toolkit no QGIS), o GPS, o "✓ Conferido" e o relatório do dia em PDF.
 Os mapas e as marcas ficam só no aparelho; este site leva só o app.
 
-Versão 1.1.
+Versão 1.2.
 
 ## No iPhone (para testes)
 1. Abrir este endereço no **Safari**.

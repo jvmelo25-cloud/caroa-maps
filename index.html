@@ -898,6 +898,57 @@ input, textarea { font: inherit; -webkit-user-select: text; user-select: text; }
 }
 [hidden] { display: none !important; }
 
+/* ------------------------------------------------------------ ficha de campo (1.2) */
+.bt-ficha { width: 100%; margin-top: 10px; border-color: #1d6fce; color: #1d6fce; }
+.bt-ficha.tem { background: #eef6ff; }
+.r-fichas { margin-top: 10px; border-color: #1d6fce; color: #1d6fce; }
+.f-andamento { margin-left: auto; font-weight: 800; background: rgba(255,255,255,.16); border-radius: 999px; padding: 4px 10px; font-size: 14px; }
+.f-corpo { padding: 10px 10px 24px; -webkit-user-select: text; user-select: text; }
+.f-secao { background: var(--branco); border-radius: 14px; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,.08); overflow: hidden; }
+.f-secao > summary {
+  list-style: none; display: flex; align-items: center; gap: 8px; padding: 14px 12px; font-weight: 800; font-size: 15px;
+  cursor: pointer; border-left: 5px solid #1d6fce;
+}
+.f-secao > summary::-webkit-details-marker { display: none; }
+.f-secao > summary::after { content: '▾'; color: var(--texto-suave); }
+.f-secao[open] > summary::after { content: '▴'; }
+.f-cont { margin-left: auto; font-size: 13px; color: var(--texto-suave); }
+.f-cont.feito { color: var(--conferido-escuro); }
+.f-secao.escritorio > summary { border-left-color: var(--linha); color: var(--texto-suave); }
+.f-corpo-secao { padding: 2px 12px 14px; }
+.f-linha { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.f-campo { flex: 1 1 42%; display: block; font-size: 12.5px; color: var(--texto-suave); font-weight: 700; margin: 0; min-width: 0; }
+.f-campo.largo { flex-basis: 100%; }
+.f-campo i { font-weight: 400; }
+.f-campo input, .f-campo textarea, .f-campo select, .f-outro {
+  display: block; width: 100%; margin-top: 4px; min-height: 46px; border-radius: 10px; border: 2px solid var(--linha);
+  padding: 8px 10px; font-size: 16px; color: var(--texto); background: var(--branco);
+}
+.f-campo textarea { resize: vertical; }
+.f-campo input.auto { background: #eef6ff; border-color: #b9d4f5; }
+.f-opcoes { margin-top: 12px; }
+.f-rot { display: block; font-weight: 800; font-size: 14px; margin-bottom: 6px; }
+.f-rot i { font-weight: 400; color: var(--texto-suave); font-size: 12px; }
+.chips { display: flex; flex-wrap: wrap; gap: 7px; }
+.chip { border: 2px solid var(--linha); background: var(--branco); border-radius: 999px; padding: 8px 13px; font-weight: 700; font-size: 14.5px; min-height: 42px; text-align: left; }
+.chip.ativo { background: var(--caroa); border-color: var(--caroa); color: var(--branco); }
+.chip.ativo::before { content: '✓ '; }
+.f-opcoes.grade .chip { border-radius: 12px; width: 100%; }
+.f-outro { margin-top: 8px; }
+.f-nota { margin: 6px 0 0; font-size: 12.5px; color: var(--texto-suave); font-style: italic; }
+.f-gps { width: 100%; margin-top: 10px; }
+.f-rodape { flex: none; padding: 10px 12px; background: var(--branco); border-top: 1px solid var(--linha); }
+.f-lev-acoes { display: flex; gap: 8px; margin-top: 8px; }
+.f-lev-acoes .bt { flex: 1; }
+.f-lev-info { font-size: 13.5px; font-weight: 700; color: var(--caroa); margin: 10px 0 0; }
+.f-avisos p { margin: 8px 0 0; background: #fff4d6; border: 1px solid #e3b23c; color: #4a3500; border-radius: 10px; padding: 8px 10px; font-size: 13.5px; }
+.f-dica { font-size: 13px; color: var(--texto-suave); }
+#f-frente-rot { margin-top: 12px; }
+#f-frente.falta { border-color: #e3b23c; background: #fff8e6; }
+#f-confrontantes .f-campo { margin-top: 8px; }
+.f-croqui-caixa { margin-top: 12px; border: 1px solid var(--linha); border-radius: 10px; overflow: hidden; background: #fff; }
+.f-croqui-caixa canvas { display: block; }
+
 </style>
 </head>
 <body>
@@ -934,6 +985,7 @@ input, textarea { font: inherit; -webkit-user-select: text; user-select: text; }
     <button id="c-maps" class="bt" type="button">🗺️ Abrir no Maps</button>
     <button id="c-conferir" class="bt bt-ok" type="button">✓ Conferido</button>
   </div>
+  <button id="c-ficha" class="bt bt-ficha" type="button">📝 Ficha de campo</button>
   <div id="c-feito" class="c-feito" hidden>
     <div id="c-feito-txt"></div>
     <textarea id="c-obs" rows="2" placeholder="Observação (opcional): o que você viu no lote"></textarea>
@@ -990,7 +1042,14 @@ input, textarea { font: inherit; -webkit-user-select: text; user-select: text; }
     <div id="r-resumo" class="resumo"></div>
     <ol id="r-itens" class="lista"></ol>
     <button id="r-pdf" class="bt bt-grande bt-ok" type="button">📄 Gerar o PDF e enviar</button>
+    <button id="r-fichas" class="bt bt-grande r-fichas" type="button">📋 Fichas do dia em PDF</button>
   </div>
+</section>
+
+<section id="p-ficha" class="painel" hidden>
+  <header class="p-cab"><button class="voltar" type="button" aria-label="Voltar">←</button><h2 id="f-titulo">Ficha de campo</h2><span id="f-andamento" class="f-andamento"></span></header>
+  <div class="p-corpo f-corpo" id="f-corpo"></div>
+  <div class="f-rodape"><button id="f-pdf" class="bt bt-grande bt-ok" type="button">📄 PDF da ficha (enviar)</button></div>
 </section>
 
 <div id="progresso" class="progresso" hidden>
@@ -1812,6 +1871,1962 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
 </script>
 <script>
 /*
+ * Caroá Maps — o LEVANTAMENTO do lote (1.2): o CSV dos pontos (Number,Y,X,Z,CODE
+ * e variações), a conversão SIRGAS 2000 geográficas <-> UTM, os polígonos do
+ * lote e da edificação, e o CROQUI (uma lista de traços e textos em mm, que a
+ * tela desenha no canvas e o PDF desenha com o jsPDF).
+ * Roda no navegador (window.Levantamento) e no Node (testes/teste_levantamento.mjs).
+ */
+(function (raiz, fabrica) {
+  'use strict';
+  var L = fabrica();
+  if (typeof module === 'object' && module.exports) module.exports = L;
+  else raiz.Levantamento = L;
+})(typeof self !== 'undefined' ? self : this, function () {
+  'use strict';
+
+  // ------------------------------------------------------------------ UTM (GRS80 = SIRGAS 2000)
+  // Série de Krüger (3ª ordem): milímetros dentro do fuso.
+  var RAD = Math.PI / 180;
+  var A_ELIPSOIDE = 6378137, ACHATAMENTO = 1 / 298.257222101;
+  var K0 = 0.9996, FALSO_E = 500000, FALSO_N_SUL = 10000000;
+  var n = ACHATAMENTO / (2 - ACHATAMENTO), n2 = n * n, n3 = n2 * n;
+  var A_RET = A_ELIPSOIDE / (1 + n) * (1 + n2 / 4 + n2 * n2 / 64);
+  var ALFA = [n / 2 - 2 * n2 / 3 + 5 * n3 / 16, 13 * n2 / 48 - 3 * n3 / 5, 61 * n3 / 240];
+  var BETA = [n / 2 - 2 * n2 / 3 + 37 * n3 / 96, n2 / 48 + n3 / 15, 17 * n3 / 480];
+  var DELTA = [2 * n - 2 * n2 / 3 - 2 * n3, 7 * n2 / 3 - 8 * n3 / 5, 56 * n3 / 15];
+  var C_CONF = 2 * Math.sqrt(n) / (1 + n);
+
+  function zonaDe(lon) { return Math.floor((lon + 180) / 6) + 1; }
+  function meridianoCentral(zona) { return (zona * 6 - 183) * RAD; }
+
+  function geoParaUtm(lat, lon, zona) {
+    zona = zona || zonaDe(lon);
+    var fi = lat * RAD, dl = lon * RAD - meridianoCentral(zona);
+    var sf = Math.sin(fi);
+    var t = Math.sinh(Math.atanh(sf) - C_CONF * Math.atanh(C_CONF * sf));
+    var xi1 = Math.atan2(t, Math.cos(dl)), eta1 = Math.atanh(Math.sin(dl) / Math.sqrt(1 + t * t));
+    var xi = xi1, eta = eta1;
+    for (var j = 1; j <= 3; j++) {
+      xi += ALFA[j - 1] * Math.sin(2 * j * xi1) * Math.cosh(2 * j * eta1);
+      eta += ALFA[j - 1] * Math.cos(2 * j * xi1) * Math.sinh(2 * j * eta1);
+    }
+    return { e: FALSO_E + K0 * A_RET * eta, n: (lat < 0 ? FALSO_N_SUL : 0) + K0 * A_RET * xi, zona: zona };
+  }
+
+  /* norte: true para o hemisfério norte (o padrão é o sul, o do Brasil cadastral) */
+  function utmParaGeo(e, nn, zona, norte) {
+    var xi = (nn - (norte ? 0 : FALSO_N_SUL)) / (K0 * A_RET), eta = (e - FALSO_E) / (K0 * A_RET);
+    var xi1 = xi, eta1 = eta;
+    for (var j = 1; j <= 3; j++) {
+      xi1 -= BETA[j - 1] * Math.sin(2 * j * xi) * Math.cosh(2 * j * eta);
+      eta1 -= BETA[j - 1] * Math.cos(2 * j * xi) * Math.sinh(2 * j * eta);
+    }
+    var chi = Math.asin(Math.sin(xi1) / Math.cosh(eta1));
+    var fi = chi;
+    for (j = 1; j <= 3; j++) fi += DELTA[j - 1] * Math.sin(2 * j * chi);
+    return { lat: fi / RAD, lon: (meridianoCentral(zona) + Math.atan2(Math.sinh(eta1), Math.cos(xi1))) / RAD };
+  }
+
+  // ------------------------------------------------------------------ números
+  function formatarM(v, casas) {
+    casas = casas == null ? 2 : casas;
+    var f = Math.pow(10, casas);
+    var r = Math.round(Math.abs(v) * f + 1e-9) / f;
+    var partes = r.toFixed(casas).split('.');
+    var inteiro = partes[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    return (v < 0 && r > 0 ? '-' : '') + inteiro + (casas ? ',' + partes[1] : '');
+  }
+
+  function lerNumero(s, decimalVirgula) {
+    var v = String(s == null ? '' : s).trim();
+    if (!v) return NaN;
+    if (/^[-+]?\d{1,3}(\.\d{3})+(,\d+)?$/.test(v)) v = v.replace(/\./g, '').replace(',', '.');
+    else if (decimalVirgula) v = v.replace(',', '.');
+    if (!/^[-+]?(\d+\.?\d*|\.\d+)([eE][-+]?\d+)?$/.test(v)) return NaN;
+    return parseFloat(v);
+  }
+
+  // ------------------------------------------------------------------ o arquivo
+  /* Os bytes do arquivo em texto: UTF-8, ou o Latin-1 do Excel do Windows. */
+  function textoDoArquivo(bytes) {
+    var t;
+    try { t = new TextDecoder('utf-8', { fatal: true }).decode(bytes); } catch (e) { t = new TextDecoder('windows-1252').decode(bytes); }
+    return t.replace(/^﻿/, '');
+  }
+
+  function normalizar(s) {
+    return String(s == null ? '' : s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  }
+
+  // nomes de coluna conhecidos, na ordem de preferência (o Emlid tem Elevation e Ellipsoidal height)
+  var COLUNAS = {
+    nome: ['number', 'num', 'numero', 'no', 'nro', 'pt', 'pto', 'ponto', 'point', 'name', 'nome', 'id', 'estacao', 'station', 'vertice', 'marco'],
+    norte: ['y', 'n', 'norte', 'northing', 'north', 'coordn', 'coordenadan', 'utmn', 'utmy'],
+    este: ['x', 'e', 'este', 'leste', 'easting', 'east', 'coorde', 'coordenadae', 'utme', 'utmx'],
+    lat: ['lat', 'latitude'],
+    lon: ['lon', 'long', 'longitude', 'lng'],
+    z: ['z', 'h', 'cota', 'alt', 'altitude', 'elev', 'elevation', 'elevacao', 'height', 'altura', 'altitudeortometrica',
+      'orthometricheight', 'ellipsoidalheight', 'alturaelipsoidal'],
+    codigo: ['code', 'cod', 'codigo', 'desc', 'descricao', 'description', 'descr', 'obs', 'observacao', 'layer', 'camada',
+      'feature', 'tipo', 'attribute'],
+  };
+
+  function mediana(lista) {
+    var v = lista.filter(function (x) { return !isNaN(x); }).map(Math.abs).sort(function (a, b) { return a - b; });
+    return v.length ? v[Math.floor(v.length / 2)] : NaN;
+  }
+  var pareceNorte = function (m) { return m >= 1e6 && m < 1e7; };
+  var pareceEste = function (m) { return m >= 1e4 && m < 1e6; };
+
+  /*
+   * O CSV (ou TXT) dos pontos -> {tipo: 'utm' | 'geo', pontos: [{nome, x, y, z, codigo, linha}],
+   * avisos}. Em 'utm', x = Este e y = Norte; em 'geo', x = longitude e y = latitude.
+   * Separador (vírgula, ponto e vírgula, tabulação ou espaço), vírgula decimal,
+   * cabeçalho ou não: o que decide qual coluna é o Norte é a grandeza dos números.
+   */
+  function lerPontos(texto) {
+    var avisos = [];
+    var todas = String(texto || '').replace(/^﻿/, '').split(/\r\n|\r|\n/);
+    var linhas = [];
+    todas.forEach(function (l, i) {
+      var t = l.trim();
+      if (!t || /^(#|\/\/)/.test(t)) return;
+      linhas.push({ texto: t, numero: i + 1 });
+    });
+    if (!linhas.length) throw new Error('O arquivo está vazio: não achei coordenadas.');
+    var amostra = linhas.slice(0, 12).map(function (l) { return l.texto; }).join('\n');
+    var sep = amostra.indexOf('\t') >= 0 ? '\t' : amostra.indexOf(';') >= 0 ? ';' : amostra.indexOf(',') >= 0 ? ',' : ' ';
+    var decimalVirgula = sep !== ',';
+    function partir(t) {
+      return sep === ' ' ? t.split(/\s+/) : t.split(sep).map(function (c) { return c.trim().replace(/^"(.*)"$/, '$1'); });
+    }
+    var celulas = linhas.map(function (l) { return partir(l.texto); });
+    var numericas = function (cs) { return cs.filter(function (c) { return !isNaN(lerNumero(c, decimalVirgula)); }).length; };
+    var cabecalho = numericas(celulas[0]) < 2 ? celulas[0].map(normalizar) : null;
+    var dados = cabecalho ? celulas.slice(1) : celulas;
+    var nLinha = (cabecalho ? linhas.slice(1) : linhas).map(function (l) { return l.numero; });
+    var largura = Math.max.apply(null, dados.map(function (c) { return c.length; }).concat([0]));
+    function coluna(i) { return dados.map(function (c) { return lerNumero(c[i], decimalVirgula); }); }
+
+    var idx = { nome: -1, norte: -1, este: -1, z: -1, codigo: -1 };
+    var tipo = null;
+    if (cabecalho) {
+      var usadas = {};
+      var achar = function (papel) {
+        var nomes = COLUNAS[papel];
+        for (var k = 0; k < nomes.length; k++) {
+          var i = cabecalho.indexOf(nomes[k]);
+          if (i >= 0 && !usadas[i]) { usadas[i] = true; return i; }
+        }
+        return -1;
+      };
+      idx.norte = achar('norte');
+      idx.este = achar('este');
+      var iLat = achar('lat'), iLon = achar('lon');
+      if (idx.norte < 0 || idx.este < 0) {
+        if (iLat >= 0 && iLon >= 0) { idx.norte = iLat; idx.este = iLon; tipo = 'geo'; }
+      }
+      idx.nome = achar('nome');
+      idx.z = achar('z');
+      idx.codigo = achar('codigo');
+      if (idx.norte >= 0 && idx.este >= 0 && !tipo) {
+        var mN = mediana(coluna(idx.norte)), mE = mediana(coluna(idx.este));
+        if (Math.max(mN, mE) <= 180) {
+          tipo = 'geo';
+        } else {
+          tipo = 'utm';
+          if (!pareceNorte(mN) && pareceNorte(mE)) {
+            var troca = idx.norte; idx.norte = idx.este; idx.este = troca;
+            avisos.push('As colunas X e Y estavam trocadas no cabeçalho: usei a de números maiores como Norte.');
+          }
+        }
+      }
+      if (tipo === 'geo' && idx.norte >= 0 && mediana(coluna(idx.norte)) > 90) {
+        var t2 = idx.norte; idx.norte = idx.este; idx.este = t2;
+      }
+    }
+    if (!tipo) {
+      // sem cabeçalho (ou sem nomes conhecidos): pela grandeza
+      idx = { nome: -1, norte: -1, este: -1, z: -1, codigo: -1 };
+      var meds = [];
+      for (var c = 0; c < largura; c++) {
+        var col = coluna(c);
+        var validos = col.filter(function (v) { return !isNaN(v); }).length;
+        meds.push(validos >= Math.max(1, dados.length * 0.6) ? mediana(col) : NaN);
+      }
+      for (c = 0; c < largura; c++) if (idx.norte < 0 && pareceNorte(meds[c])) idx.norte = c;
+      for (c = 0; c < largura; c++) if (idx.este < 0 && c !== idx.norte && pareceEste(meds[c])) idx.este = c;
+      if (idx.norte >= 0 && idx.este >= 0) {
+        tipo = 'utm';
+      } else {
+        // graus: as duas primeiras colunas com decimais dentro de ±180 (Y antes de X, como no Number,Y,X)
+        var graus = [];
+        for (c = 0; c < largura; c++) {
+          var v = coluna(c).filter(function (x) { return !isNaN(x); });
+          if (v.length && meds[c] <= 180 && v.some(function (x) { return x !== Math.round(x); })) graus.push(c);
+        }
+        if (graus.length >= 2) {
+          tipo = 'geo';
+          idx.norte = graus[0]; idx.este = graus[1];
+          if (meds[idx.norte] > 90) { idx.norte = graus[1]; idx.este = graus[0]; }
+        }
+      }
+      if (tipo) {
+        var livres = [];
+        for (c = 0; c < largura; c++) if (c !== idx.norte && c !== idx.este) livres.push(c);
+        var numericaC = function (k) { return !isNaN(meds[k]); };
+        if (livres.length && livres[0] < Math.min(idx.norte, idx.este)) idx.nome = livres.shift();
+        for (var k = 0; k < livres.length; k++) if (idx.z < 0 && numericaC(livres[k]) && livres[k] > Math.min(idx.norte, idx.este)) idx.z = livres[k];
+        for (k = 0; k < livres.length; k++) if (idx.codigo < 0 && livres[k] !== idx.z && !numericaC(livres[k])) idx.codigo = livres[k];
+      }
+    }
+    if (!tipo || idx.norte < 0 || idx.este < 0) {
+      throw new Error('Não achei as coordenadas no arquivo (esperava Number,Y,X,Z,CODE ou parecido, em SIRGAS 2000 / UTM).');
+    }
+
+    var pontos = [];
+    dados.forEach(function (cs, i) {
+      var y = lerNumero(cs[idx.norte], decimalVirgula), x = lerNumero(cs[idx.este], decimalVirgula);
+      if (isNaN(x) || isNaN(y)) {
+        avisos.push('A linha ' + nLinha[i] + ' ficou de fora (sem coordenada): ' + cs.join(sep === '\t' ? ' ' : sep).slice(0, 60));
+        return;
+      }
+      var codigo = idx.codigo >= 0 ? cs[idx.codigo] : '';
+      // separado por espaço: o código pode ter espaços (o resto da linha)
+      if (sep === ' ' && idx.codigo >= 0 && idx.codigo === largura - 1) codigo = cs.slice(idx.codigo).join(' ');
+      else if (sep === ' ' && idx.codigo >= 0 && cs.length > largura) codigo = cs.slice(idx.codigo).join(' ');
+      var z = idx.z >= 0 ? lerNumero(cs[idx.z], decimalVirgula) : NaN;
+      pontos.push({
+        nome: idx.nome >= 0 && String(cs[idx.nome] || '').trim() ? String(cs[idx.nome]).trim() : String(pontos.length + 1),
+        x: x, y: y, z: isNaN(z) ? null : z, codigo: String(codigo || '').trim().toUpperCase(), linha: nLinha[i],
+      });
+    });
+    if (!pontos.length) throw new Error('Não achei nenhuma coordenada válida no arquivo.');
+    return { tipo: tipo, pontos: pontos, avisos: avisos };
+  }
+
+  // ------------------------------------------------------------------ geometria plana (UTM)
+  function areaComSinal(v) {
+    var s = 0;
+    for (var i = 0; i < v.length; i++) {
+      var a = v[i], b = v[(i + 1) % v.length];
+      s += a.e * b.n - b.e * a.n;
+    }
+    return s / 2;
+  }
+
+  function cruzam(p1, p2, p3, p4) {
+    function lado(a, b, c) { return (b.e - a.e) * (c.n - a.n) - (b.n - a.n) * (c.e - a.e); }
+    var d1 = lado(p3, p4, p1), d2 = lado(p3, p4, p2), d3 = lado(p1, p2, p3), d4 = lado(p1, p2, p4);
+    return ((d1 > 0 && d2 < 0) || (d1 < 0 && d2 > 0)) && ((d3 > 0 && d4 < 0) || (d3 < 0 && d4 > 0));
+  }
+
+  function simples(v) {
+    var k = v.length;
+    for (var i = 0; i < k; i++) {
+      for (var j = i + 1; j < k; j++) {
+        if (j === i + 1 || (i === 0 && j === k - 1)) continue;
+        if (cruzam(v[i], v[(i + 1) % k], v[j], v[(j + 1) % k])) return false;
+      }
+    }
+    return true;
+  }
+
+  function distancia(a, b) { return Math.sqrt((a.e - b.e) * (a.e - b.e) + (a.n - b.n) * (a.n - b.n)); }
+
+  function limpar(v) {
+    var r = [];
+    v.forEach(function (p) { if (!r.length || distancia(r[r.length - 1], p) > 0.01) r.push(p); });
+    while (r.length > 2 && distancia(r[0], r[r.length - 1]) <= 0.01) r.pop();
+    return r;
+  }
+
+  function porAngulo(v) {
+    var ce = 0, cn = 0;
+    v.forEach(function (p) { ce += p.e; cn += p.n; });
+    ce /= v.length; cn /= v.length;
+    return v.slice().sort(function (a, b) { return Math.atan2(a.n - cn, a.e - ce) - Math.atan2(b.n - cn, b.e - ce); });
+  }
+
+  /* Polígono pela ordem dada; se ele se cruza, pela posição em volta do centro. */
+  function poligono(pontos, nomeDoQue, avisos) {
+    var v = limpar(pontos);
+    if (v.length < 3) {
+      avisos.push(nomeDoQue + ': só ' + v.length + ' ponto(s), não dá para fechar o polígono.');
+      return null;
+    }
+    var reordenado = false, ehSimples = simples(v);
+    if (!ehSimples) {
+      var outro = porAngulo(v);
+      if (simples(outro)) {
+        v = outro;
+        reordenado = true;
+        ehSimples = true;
+        avisos.push(nomeDoQue + ': os pontos não fecham na ordem da numeração; refiz o contorno pela posição (confira o croqui).');
+      } else {
+        avisos.push(nomeDoQue + ': o contorno se cruza; confira os pontos.');
+      }
+    }
+    var lados = v.map(function (a, i) {
+      var b = v[(i + 1) % v.length];
+      return { i: i, de: a.nome, para: b.nome, d: distancia(a, b) };
+    });
+    return {
+      vertices: v, area: Math.abs(areaComSinal(v)), lados: lados,
+      perimetro: lados.reduce(function (s, l) { return s + l.d; }, 0), reordenado: reordenado, simples: ehSimples,
+    };
+  }
+
+  // ------------------------------------------------------------------ o levantamento
+  var RE_EDIFICACAO = /^(ED|CASA|CONST|PRED|GALP|PAREDE|BENF|TELH|ANEXO|GARAG|CS\d*$)/;
+  var RE_LOTE = /^(LT|LOTE|DIV|MURO|MR\d*$|CERCA|CE\d*$|GRAD|CANTO|VERT|TEST|LIM|ALINH|PORT)/;
+
+  function chaveDoCodigo(codigo) { return normalizar(codigo).toUpperCase(); }
+  function categoria(codigo) {
+    var c = chaveDoCodigo(codigo);
+    if (!c) return 'lote';
+    if (RE_EDIFICACAO.test(c)) return 'edificacao';
+    if (RE_LOTE.test(c)) return 'lote';
+    return 'outro';
+  }
+
+  function comparaNatural(a, b) {
+    var pa = String(a).match(/\d+|\D+/g) || [], pb = String(b).match(/\d+|\D+/g) || [];
+    for (var i = 0; i < Math.min(pa.length, pb.length); i++) {
+      var na = /^\d/.test(pa[i]), nb = /^\d/.test(pb[i]);
+      if (na && nb && +pa[i] !== +pb[i]) return +pa[i] - +pb[i];
+      if (pa[i] !== pb[i]) return pa[i] < pb[i] ? -1 : 1;
+    }
+    return pa.length - pb.length;
+  }
+
+  function naOrdem(pontos) {
+    var todosComNumero = pontos.every(function (p) { return /\d/.test(p.nome); });
+    if (!todosComNumero) return pontos.slice();
+    return pontos.slice().sort(function (a, b) { return comparaNatural(a.nome, b.nome) || a.linha - b.linha; });
+  }
+
+  function distanciaGeo(a, b) {
+    var f1 = a.lat * RAD, f2 = b.lat * RAD, df = f2 - f1, dl = (b.lon - a.lon) * RAD;
+    var h = Math.sin(df / 2) * Math.sin(df / 2) + Math.cos(f1) * Math.cos(f2) * Math.sin(dl / 2) * Math.sin(dl / 2);
+    return 2 * 6371008.8 * Math.asin(Math.min(1, Math.sqrt(h)));
+  }
+
+  /*
+   * leitura (lerPontos) -> {zona, pontos, lote, edificacoes: [{codigo, ...}], outros, avisos}
+   * lote/edificação: {vertices: [{nome, e, n, z, lat, lon, codigo}], area, perimetro,
+   * lados: [{i, de, para, d}], reordenado, simples}.
+   * opcoes: {zona (padrão: a do "perto", ou 22), perto: {lat, lon} = o lote do mapa}.
+   */
+  function montarLevantamento(leitura, opcoes) {
+    opcoes = opcoes || {};
+    var avisos = (leitura.avisos || []).slice();
+    var zona = opcoes.zona;
+    var pontos = leitura.pontos.map(function (p) {
+      return { nome: p.nome, z: p.z, codigo: p.codigo, linha: p.linha, x: p.x, y: p.y };
+    });
+    if (leitura.tipo === 'geo') {
+      if (!zona) {
+        var somaLon = 0;
+        pontos.forEach(function (p) { somaLon += p.x; });
+        zona = zonaDe(somaLon / pontos.length);
+      }
+      pontos.forEach(function (p) {
+        var u = geoParaUtm(p.y, p.x, zona);
+        p.e = u.e; p.n = u.n; p.lat = p.y; p.lon = p.x;
+      });
+    } else {
+      zona = zona || (opcoes.perto ? zonaDe(opcoes.perto.lon) : 22);
+      pontos.forEach(function (p) {
+        p.e = p.x; p.n = p.y;
+        var g = utmParaGeo(p.e, p.n, zona);
+        p.lat = g.lat; p.lon = g.lon;
+      });
+    }
+    pontos.forEach(function (p) { delete p.x; delete p.y; p.categoria = categoria(p.codigo); });
+
+    var doLote = pontos.filter(function (p) { return p.categoria === 'lote'; });
+    var outros = pontos.filter(function (p) { return p.categoria === 'outro'; });
+    if (!doLote.length && outros.length >= 3) {
+      avisos.push('Nenhum ponto com código de lote (LOTE, MURO, CERCA, DIV…): o lote saiu dos pontos de código ' +
+        outros.map(function (p) { return p.codigo || '(vazio)'; }).filter(function (c, i, l) { return l.indexOf(c) === i; }).join(', ') + '.');
+      doLote = outros;
+      outros = [];
+      doLote.forEach(function (p) { p.categoria = 'lote'; });
+    }
+    var lote = doLote.length ? poligono(naOrdem(doLote), 'Lote', avisos) : null;
+
+    var grupos = [], porCodigo = {};
+    pontos.forEach(function (p) {
+      if (p.categoria !== 'edificacao') return;
+      var c = chaveDoCodigo(p.codigo);
+      if (!porCodigo[c]) { porCodigo[c] = { codigo: c, pontos: [] }; grupos.push(porCodigo[c]); }
+      porCodigo[c].pontos.push(p);
+    });
+    var edificacoes = [];
+    grupos.forEach(function (g) {
+      var pol = poligono(naOrdem(g.pontos), 'Edificação ' + g.codigo, avisos);
+      if (pol) { pol.codigo = g.codigo; edificacoes.push(pol); } else outros = outros.concat(g.pontos);
+    });
+
+    if (opcoes.perto && pontos.length) {
+      var lat = 0, lon = 0;
+      pontos.forEach(function (p) { lat += p.lat; lon += p.lon; });
+      var d = distanciaGeo({ lat: lat / pontos.length, lon: lon / pontos.length }, opcoes.perto);
+      if (d > 1000) {
+        avisos.push('Os pontos caem a ' + (d >= 10000 ? Math.round(d / 1000) : formatarM(d / 1000, 1)) +
+          ' km do lote do mapa: confira se o arquivo está em SIRGAS 2000 / UTM ' + zona + 'S.');
+      }
+    }
+    return { zona: zona, pontos: pontos, lote: lote, edificacoes: edificacoes, outros: outros, avisos: avisos };
+  }
+
+  // ------------------------------------------------------------------ o croqui
+  var ESCALAS = [50, 100, 125, 200, 250, 300, 400, 500, 750, 1000, 1250, 1500, 2000, 2500, 5000, 10000];
+  var LADO_MINIMO_MM = 4;
+  var BARRAS_M = [1, 2, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000];
+
+  function dentroMm(px, py, pol) {
+    var c = false;
+    for (var i = 0, j = pol.length - 1; i < pol.length; j = i++) {
+      var xi = pol[i][0], yi = pol[i][1], xj = pol[j][0], yj = pol[j][1];
+      if ((yi > py) !== (yj > py) && px < (xj - xi) * (py - yi) / (yj - yi) + xi) c = !c;
+    }
+    return c;
+  }
+
+  function centroDoPoligono(pts) {
+    var a = 0, cx = 0, cy = 0;
+    for (var i = 0; i < pts.length; i++) {
+      var p = pts[i], q = pts[(i + 1) % pts.length], f = p[0] * q[1] - q[0] * p[1];
+      a += f; cx += (p[0] + q[0]) * f; cy += (p[1] + q[1]) * f;
+    }
+    if (Math.abs(a) < 1e-9) return pts[0].slice();
+    var c = [cx / (3 * a), cy / (3 * a)];
+    if (dentroMm(c[0], c[1], pts)) return c;
+    // não convexo: o meio da maior corda horizontal na altura do centro
+    var y = c[1], xs = [];
+    for (i = 0; i < pts.length; i++) {
+      var u = pts[i], w = pts[(i + 1) % pts.length];
+      if ((u[1] > y) !== (w[1] > y)) xs.push(u[0] + (y - u[1]) * (w[0] - u[0]) / (w[1] - u[1]));
+    }
+    xs.sort(function (m, k) { return m - k; });
+    var melhor = null;
+    for (i = 0; i + 1 < xs.length; i += 2) if (!melhor || xs[i + 1] - xs[i] > melhor[1] - melhor[0]) melhor = [xs[i], xs[i + 1]];
+    return melhor ? [(melhor[0] + melhor[1]) / 2, y] : pts[0].slice();
+  }
+
+  /* largura aproximada de um texto (mm) em letra sem serifa de `tam` mm */
+  function larguraDoTexto(t, tam) { return String(t).length * tam * 0.52; }
+
+  /* ângulo do texto ao longo do lado, de pé (−90 < a ≤ 90), anti-horário no papel */
+  function anguloLegivel(dx, dy) {
+    var a = -Math.atan2(dy, dx) / RAD;
+    if (a > 90) a -= 180;
+    if (a <= -90) a += 180;
+    return a;
+  }
+
+  /*
+   * O croqui no quadro de `largura` x `altura` mm (origem em cima à esquerda, y
+   * para baixo), em escala redonda (1:50 … 1:10.000), com o Norte para cima.
+   * opcoes: {largura, altura, frente (índice do lado da rua), logradouro,
+   * confrontantes: {índice do lado: texto}, pavimentos: {código da edificação ou
+   * 'todos': n}}. Devolve {escala, largura, altura, itens: [...]}:
+   *   {tipo: 'poligono', estilo: 'lote' | 'edificacao', pontos: [[x, y]]}
+   *   {tipo: 'texto', x, y, texto, tam (mm), angulo (graus, anti-horário), estilo}
+   *     (centrado em x, y; o estilo 'legenda' começa em x)
+   *   {tipo: 'ponto', x, y, r}   {tipo: 'norte', x, y, tam}
+   *   {tipo: 'escala', x, y, comprimento (mm), metros}
+   */
+  function croqui(lev, opcoes) {
+    opcoes = opcoes || {};
+    var W = opcoes.largura || 180, H = opcoes.altura || 135, M = opcoes.margem || 10;
+    var itens = [];
+    var formas = [];
+    if (lev && lev.lote) formas.push(lev.lote);
+    (lev && lev.edificacoes || []).forEach(function (ed) { formas.push(ed); });
+    if (!formas.length) {
+      return { escala: null, largura: W, altura: H, itens: [{ tipo: 'texto', x: W / 2, y: H / 2, texto: 'Sem levantamento: importe o CSV dos pontos.', tam: 3.5, angulo: 0, estilo: 'aviso' }] };
+    }
+    var eMin = Infinity, eMax = -Infinity, nMin = Infinity, nMax = -Infinity;
+    formas.forEach(function (f) {
+      f.vertices.forEach(function (v) {
+        eMin = Math.min(eMin, v.e); eMax = Math.max(eMax, v.e); nMin = Math.min(nMin, v.n); nMax = Math.max(nMax, v.n);
+      });
+    });
+    var larguraUtil = W - 2 * M, alturaUtil = H - 2 * M - 9;
+    var escala = ESCALAS[ESCALAS.length - 1];
+    for (var k = 0; k < ESCALAS.length; k++) {
+      var s0 = 1000 / ESCALAS[k];
+      if ((eMax - eMin) * s0 <= larguraUtil && (nMax - nMin) * s0 <= alturaUtil) { escala = ESCALAS[k]; break; }
+    }
+    var s = 1000 / escala;
+    var ox = M + (larguraUtil - (eMax - eMin) * s) / 2, oy = M + (alturaUtil - (nMax - nMin) * s) / 2;
+    function T(v) { return [ox + (v.e - eMin) * s, oy + (nMax - v.n) * s]; }
+    function preso(x, y) { return [Math.min(W - 1, Math.max(1, x)), Math.min(H - 1, Math.max(1, y))]; }
+    var ocupados = [];
+    function bate(c) { return ocupados.some(function (o) { return c.x0 < o.x1 && c.x1 > o.x0 && c.y0 < o.y1 && c.y1 > o.y0; }); }
+    function texto(x, y, t, tam, angulo, estilo) {
+      var p = preso(x, y);
+      itens.push({ tipo: 'texto', x: p[0], y: p[1], texto: t, tam: tam, angulo: angulo || 0, estilo: estilo });
+      var a = (angulo || 0) * RAD, w = larguraDoTexto(t, tam), h = tam * 1.2;
+      var bw = Math.abs(w * Math.cos(a)) + Math.abs(h * Math.sin(a)), bh = Math.abs(w * Math.sin(a)) + Math.abs(h * Math.cos(a));
+      if (estilo === 'legenda') ocupados.push({ x0: p[0], x1: p[0] + w, y0: p[1] - h / 2, y1: p[1] + h / 2 });
+      else ocupados.push({ x0: p[0] - bw / 2, x1: p[0] + bw / 2, y0: p[1] - bh / 2, y1: p[1] + bh / 2 });
+    }
+
+    /* para cada lado: o meio, o ângulo e a normal para FORA do polígono */
+    function lados(pts) {
+      return pts.map(function (p, i) {
+        var q = pts[(i + 1) % pts.length], dx = q[0] - p[0], dy = q[1] - p[1], len = Math.sqrt(dx * dx + dy * dy) || 1;
+        var meio = [(p[0] + q[0]) / 2, (p[1] + q[1]) / 2], nx = -dy / len, ny = dx / len;
+        if (dentroMm(meio[0] + nx * 0.5, meio[1] + ny * 0.5, pts)) { nx = -nx; ny = -ny; }
+        return { meio: meio, nx: nx, ny: ny, angulo: anguloLegivel(dx, dy) };
+      });
+    }
+
+    if (lev.lote) {
+      var pl = lev.lote.vertices.map(T);
+      itens.push({ tipo: 'poligono', estilo: 'lote', pontos: pl });
+      var ll = lados(pl);
+      lev.lote.lados.forEach(function (lado, i) {
+        var g = ll[i];
+        // lado de menos de 4 mm no papel: sem texto (a medida vai na tabela do anexo)
+        if (lado.d * s < LADO_MINIMO_MM) return;
+        texto(g.meio[0] + g.nx * 3.2, g.meio[1] + g.ny * 3.2, formatarM(lado.d), 2.6, g.angulo, 'medida');
+        var conf = opcoes.confrontantes && opcoes.confrontantes[i];
+        if (opcoes.frente === i && opcoes.logradouro) {
+          texto(g.meio[0] + g.nx * 8.5, g.meio[1] + g.ny * 8.5, opcoes.logradouro, 3.2, g.angulo, 'logradouro');
+        } else if (conf) {
+          texto(g.meio[0] + g.nx * 8.6, g.meio[1] + g.ny * 8.6, conf, 2.4, g.angulo, 'confrontante');
+        }
+      });
+      // os vértices: o número do ponto para fora, na bissetriz (um colado no outro não se repete)
+      var postos = [];
+      pl.forEach(function (p, i) {
+        var a = ll[(i - 1 + pl.length) % pl.length], b = ll[i];
+        var bx = a.nx + b.nx, by = a.ny + b.ny, len = Math.sqrt(bx * bx + by * by) || 1;
+        itens.push({ tipo: 'ponto', x: p[0], y: p[1], r: 0.6 });
+        var x = p[0] + bx / len * 2.6, y = p[1] + by / len * 2.6;
+        if (postos.some(function (q) { return Math.hypot(q[0] - x, q[1] - y) < 2.5; })) return;
+        postos.push([x, y]);
+        texto(x, y, lev.lote.vertices[i].nome, 2.0, 0, 'vertice');
+      });
+    }
+    var pav = opcoes.pavimentos || {};
+    var casas = [];
+    (lev.edificacoes || []).forEach(function (ed) {
+      var pe = ed.vertices.map(T);
+      casas.push(pe);
+      itens.push({ tipo: 'poligono', estilo: 'edificacao', pontos: pe });
+      var le = lados(pe);
+      ed.lados.forEach(function (lado, i) {
+        var g = le[i];
+        if (lado.d * s < 6) return;
+        texto(g.meio[0] + g.nx * 2.2, g.meio[1] + g.ny * 2.2, formatarM(lado.d), 2.0, g.angulo, 'medida-edificacao');
+      });
+    });
+
+    /* um rótulo deitado (uma ou mais linhas) cabe em (x, y)? dentro do lote
+       (as quinas), fora das casas, sem vértice de casa dentro e sem outro texto */
+    function caixaDe(x, y, linhas, tam) {
+      var w = Math.max.apply(null, linhas.map(function (t) { return larguraDoTexto(t, tam); })), h = linhas.length * tam * 1.35;
+      return { x0: x - w / 2 - 0.6, x1: x + w / 2 + 0.6, y0: y - h / 2 - 0.4, y1: y + h / 2 + 0.4 };
+    }
+    function cabeEm(c) {
+      var quinas = [[c.x0, c.y0], [c.x1, c.y0], [c.x1, c.y1], [c.x0, c.y1], [(c.x0 + c.x1) / 2, (c.y0 + c.y1) / 2]];
+      if (c.x0 < 1 || c.y0 < 1 || c.x1 > W - 1 || c.y1 > H - 12) return false;
+      if (lev.lote && !quinas.every(function (q) { return dentroMm(q[0], q[1], pl); })) return false;
+      for (var k = 0; k < casas.length; k++) {
+        if (quinas.some(function (q) { return dentroMm(q[0], q[1], casas[k]); })) return false;
+        if (casas[k].some(function (v) { return v[0] > c.x0 && v[0] < c.x1 && v[1] > c.y0 && v[1] < c.y1; })) return false;
+      }
+      return !bate(c);
+    }
+    /* o primeiro lugar livre perto de (x, y): primeiro ele, depois em volta */
+    function lugarLivre(x, y, linhas, tam, raioMax) {
+      if (cabeEm(caixaDe(x, y, linhas, tam))) return [x, y];
+      for (var raio = 2; raio <= raioMax; raio += 1.5) {
+        for (var ang = 90; ang < 450; ang += 20) {
+          var px = x + raio * Math.cos(ang * RAD), py = y + raio * Math.sin(ang * RAD);
+          if (cabeEm(caixaDe(px, py, linhas, tam))) return [px, py];
+        }
+      }
+      return null;
+    }
+
+    (lev.edificacoes || []).forEach(function (ed, k) {
+      var pe = casas[k];
+      var xs = pe.map(function (p) { return p[0]; }), ys = pe.map(function (p) { return p[1]; });
+      var larg = Math.max.apply(null, xs) - Math.min.apply(null, xs), alt = Math.max.apply(null, ys) - Math.min.apply(null, ys);
+      var np = pav[ed.codigo] || pav.todos;
+      var nome = (lev.edificacoes.length > 1 ? 'Edificação ' + (k + 1) : 'Edificação') + (np ? ' · ' + np + ' pav.' : '');
+      var area = formatarM(ed.area) + ' m²';
+      var c = centroDoPoligono(pe), lugar = null;
+      // cabe dentro da casa? senão, o lugar livre mais perto, do lado de fora
+      var curto = 'Edif.' + (np ? ' · ' + np + ' pav.' : '');
+      [nome, curto].some(function (t) {
+        var cx = caixaDe(c[0], c[1], [t, area], 2.4);
+        if (cx.x1 - cx.x0 <= larg - 1.5 && cx.y1 - cx.y0 <= alt - 1.5 && !bate(cx)) { nome = t; lugar = c; return true; }
+        return false;
+      });
+      if (!lugar) {
+        var abaixo = [(Math.min.apply(null, xs) + Math.max.apply(null, xs)) / 2, Math.max.apply(null, ys) + 7];
+        lugar = lugarLivre(abaixo[0], abaixo[1], [nome, area], 2.4, 40) || abaixo;
+      }
+      texto(lugar[0], lugar[1] - 1.6, nome, 2.4, 0, 'edificacao');
+      texto(lugar[0], lugar[1] + 1.6, area, 2.4, 0, 'edificacao');
+    });
+    if (lev.lote) {
+      // a área do lote: dentro do lote, fora das casas e sem bater em outro texto
+      var rotulo = 'Lote: ' + formatarM(lev.lote.area) + ' m²';
+      var ca = centroDoPoligono(pl);
+      var achou = lugarLivre(ca[0], ca[1], [rotulo], 3.0, 70) ||
+        [ca[0], Math.max.apply(null, pl.map(function (p) { return p[1]; })) + 9.5];
+      texto(achou[0], achou[1], rotulo, 3.0, 0, 'area');
+    }
+    itens.push({ tipo: 'norte', x: W - 9, y: 12, tam: 10 });
+    var barra = BARRAS_M[0];
+    for (k = 0; k < BARRAS_M.length; k++) { if (BARRAS_M[k] * s <= 45) barra = BARRAS_M[k]; }
+    itens.push({ tipo: 'escala', x: 6, y: H - 11.5, comprimento: barra * s, metros: barra });
+    texto(6, H - 2.6, 'Escala 1:' + formatarM(escala, 0) + ' · medidas em metros (SIRGAS 2000 / UTM ' + lev.zona + 'S)', 2.2, 0, 'legenda');
+    return { escala: escala, largura: W, altura: H, itens: itens };
+  }
+
+  return {
+    zonaDe: zonaDe, geoParaUtm: geoParaUtm, utmParaGeo: utmParaGeo,
+    formatarM: formatarM, textoDoArquivo: textoDoArquivo, lerPontos: lerPontos,
+    montarLevantamento: montarLevantamento, categoria: categoria, croqui: croqui,
+  };
+});
+
+</script>
+<script>
+/*
+ * Caroá Maps — o MODELO da ficha de campo (1.2): a "Ficha de campo · Verificação
+ * de imóveis" de Palmeira das Missões, do jeito do papel (seções, campos,
+ * caixinhas), e as contas que não dependem da tela. A tela (ficha.js) e o PDF
+ * são desenhados a partir deste modelo. Outra cidade = outro modelo igual a este.
+ * Roda no navegador (window.FichaModelo) e no Node (testes/teste_ficha.mjs).
+ *
+ * Linhas de uma seção:
+ *   {campos: [{id, rotulo, largura (fração da linha), tipo: 'texto' | 'numero' | 'longo', calculado}]}
+ *   {opcoes: {id, rotulo, escolha: 'uma' | 'varias', valores: [...], outro: 'Outro' | 'Outra' | 'Qual'}}
+ *       (com "outro", o texto vai em <id>_outro)
+ *   {grade: {id, escolha, valores, colunas}}    caixinhas em colunas, sem rótulo
+ *   {croqui: true}                               o desenho do levantamento
+ *   {nota: 'texto'}                              linha em itálico, sem campo
+ */
+(function (raiz, fabrica) {
+  'use strict';
+  var F = fabrica();
+  if (typeof module === 'object' && module.exports) module.exports = F;
+  else raiz.FichaModelo = F;
+})(typeof self !== 'undefined' ? self : this, function () {
+  'use strict';
+
+  var PALMEIRA = {
+    id: 'palmeira_das_missoes_2026',
+    nome: 'Palmeira das Missões/RS',
+    cabecalho: {
+      prefeitura: 'Prefeitura Municipal de Palmeira das Missões/RS',
+      linhas: ['Contrato Administrativo nº 099/2026 · Pregão Eletrônico nº 913/2025',
+        'Cadastro Técnico Multifinalitário · Verificação de campo pós-vetorização'],
+    },
+    titulo: 'FICHA DE CAMPO · VERIFICAÇÃO DE IMÓVEIS',
+    rodape: ['Os dados pessoais desta ficha são tratados exclusivamente para a atualização do cadastro imobiliário do Município (Lei nº 13.709/2018).',
+      'Encarregado de dados (LGPD): contato@caroatopoagri.com.br',
+      'Caroá Topografia e Agrimensura Ltda · CNPJ 49.921.553/0001-76 · Palmeirina/PE'],
+    sistema: 'SIRGAS 2000 / UTM fuso 22S (EPSG:31982)',
+    secoes: [
+      { id: 'visita', titulo: null, curto: 'Visita', pagina: 1, linhas: [
+        { campos: [{ id: 'numero_ficha', rotulo: 'Nº da ficha', largura: 0.136 }, { id: 'data', rotulo: 'Data', largura: 0.138 },
+          { id: 'hora', rotulo: 'Hora', largura: 0.1 }, { id: 'tecnico', rotulo: 'Técnico de campo', largura: 0.336 },
+          { id: 'auxiliar', rotulo: 'Auxiliar', largura: 0.29 }] },
+      ] },
+      { id: 'motivo', titulo: 'MOTIVO DA VISITA', curto: 'Motivo', nota: 'marque todos os que se aplicam', pagina: 1, linhas: [
+        { grade: { id: 'motivo', escolha: 'varias', colunas: 2, valores: [
+          'Imóvel não identificado na ortofoto pelo vetorizador', 'Imóvel identificado na imagem e ausente da base cadastral',
+          'Divergência de área construída em relação ao cadastro', 'Divergência de uso ou de ocupação do imóvel'] } },
+        { opcoes: { id: 'causa', rotulo: 'Causa da não identificação', escolha: 'varias',
+          valores: ['Vegetação/copa', 'Sombra', 'Cobertura sobreposta', 'Defeito na imagem'], outro: 'Outra' } },
+      ] },
+      { id: 'identificacao', titulo: 'IDENTIFICAÇÃO DO IMÓVEL', curto: 'Identificação', pagina: 1, linhas: [
+        { campos: [{ id: 'id_vetorizacao', rotulo: 'ID do lote na vetorização (nº fictício)', largura: 0.331 },
+          { id: 'inscricao', rotulo: 'Inscrição imobiliária (se houver)', largura: 0.331 },
+          { id: 'inscricao_provisoria', rotulo: 'Inscrição provisória Caroá (imóvel novo)', largura: 0.338 }] },
+        { campos: [{ id: 'setor', rotulo: 'Setor', largura: 0.151 }, { id: 'quadra', rotulo: 'Quadra', largura: 0.151 },
+          { id: 'lote', rotulo: 'Lote', largura: 0.151 }, { id: 'unidade', rotulo: 'Unidade', largura: 0.151 },
+          { id: 'loteamento', rotulo: 'Loteamento', largura: 0.396 }] },
+        { campos: [{ id: 'logradouro', rotulo: 'Logradouro', largura: 0.587 }, { id: 'numero', rotulo: 'Número', largura: 0.147 },
+          { id: 'complemento', rotulo: 'Complemento', largura: 0.266 }] },
+        { campos: [{ id: 'bairro', rotulo: 'Bairro / localidade', largura: 0.3 }, { id: 'cep', rotulo: 'CEP', largura: 0.148 },
+          { id: 'coord_e', rotulo: 'Coordenada E (m)', largura: 0.19, tipo: 'numero' },
+          { id: 'coord_n', rotulo: 'Coordenada N (m)', largura: 0.196, tipo: 'numero' },
+          { id: 'ponto_gnss', rotulo: 'Ponto GNSS / foto', largura: 0.166 }] },
+        { opcoes: { id: 'distrito', rotulo: 'Distrito', escolha: 'uma',
+          valores: ['Sede', 'Santa Terezinha', 'Quebrado', 'Santa Rosa', 'São Bento'] } },
+        { nota: 'Coordenadas em SIRGAS 2000 / UTM fuso 22S (EPSG:31982), tomadas na testada do imóvel.' },
+      ] },
+      { id: 'situacao', titulo: 'SITUAÇÃO CADASTRAL', curto: 'Situação cadastral', nota: 'preencher só para imóvel ausente da base', pagina: 1, linhas: [
+        { grade: { id: 'situacao_cadastral', escolha: 'varias', colunas: 2, valores: [
+          'Construção nova em lote já cadastrado', 'Desmembramento não averbado',
+          'Remembramento (unificação) não averbado', 'Ocupação sem registro / loteamento irregular'] } },
+        { campos: [{ id: 'inscricao_origem', rotulo: 'Inscrição do lote de origem (desmembramento/remembramento)', largura: 0.684 },
+          { id: 'unidades_resultantes', rotulo: 'Quantidade de unidades resultantes', largura: 0.316, tipo: 'numero' }] },
+      ] },
+      { id: 'terreno', titulo: 'TERRENO', curto: 'Terreno', pagina: 1, linhas: [
+        { opcoes: { id: 'ocupacao', rotulo: 'Ocupação', escolha: 'uma', valores: ['Edificado', 'Terreno vago', 'Em construção', 'Demolido / ruínas'] } },
+        { opcoes: { id: 'situacao_quadra', rotulo: 'Situação na quadra', escolha: 'uma',
+          valores: ['Meio de quadra', 'Esquina', 'Encravado', 'Vila / condomínio', 'Gleba'] } },
+        { opcoes: { id: 'topografia', rotulo: 'Topografia', escolha: 'uma', valores: ['Plano', 'Aclive', 'Declive', 'Irregular'] } },
+        { opcoes: { id: 'fechamento', rotulo: 'Fechamento frontal', escolha: 'uma', valores: ['Muro', 'Cerca', 'Gradil', 'Sem fechamento'] } },
+        { opcoes: { id: 'calcada', rotulo: 'Calçada', escolha: 'uma', valores: ['Existente', 'Inexistente'] } },
+        { campos: [{ id: 'testada_principal', rotulo: 'Testada principal (m)', largura: 0.25, tipo: 'numero' },
+          { id: 'testada_secundaria', rotulo: 'Testada secundária (m)', largura: 0.25, tipo: 'numero' },
+          { id: 'profundidade', rotulo: 'Profundidade média (m)', largura: 0.25, tipo: 'numero' },
+          { id: 'area_terreno', rotulo: 'Área do terreno (m²)', largura: 0.25, tipo: 'numero' }] },
+      ] },
+      { id: 'edificacao', titulo: 'EDIFICAÇÃO', curto: 'Edificação', pagina: 1, linhas: [
+        { opcoes: { id: 'uso', rotulo: 'Uso', escolha: 'uma',
+          valores: ['Residencial', 'Comercial', 'Serviços', 'Industrial', 'Misto', 'Religioso', 'Público'], outro: 'Outro' } },
+        { opcoes: { id: 'tipo', rotulo: 'Tipo', escolha: 'uma', valores: ['Casa', 'Apartamento', 'Sala / loja', 'Galpão', 'Telheiro'], outro: 'Outro' } },
+        { opcoes: { id: 'posicao', rotulo: 'Posição', escolha: 'uma', valores: ['Isolada', 'Geminada', 'Conjugada'] } },
+        { opcoes: { id: 'alinhamento', rotulo: 'Alinhamento', escolha: 'uma', valores: ['No alinhamento', 'Recuada'] } },
+        { opcoes: { id: 'estrutura', rotulo: 'Estrutura', escolha: 'uma', valores: ['Alvenaria', 'Madeira', 'Mista', 'Concreto armado', 'Metálica'] } },
+        { opcoes: { id: 'cobertura', rotulo: 'Cobertura', escolha: 'uma', valores: ['Fibrocimento', 'Cerâmica', 'Metálica', 'Laje'], outro: 'Outra' } },
+        { opcoes: { id: 'revestimento', rotulo: 'Revestimento externo', escolha: 'uma',
+          valores: ['Sem revestimento', 'Reboco', 'Pintura', 'Cerâmica / pastilha', 'Madeira'] } },
+        { opcoes: { id: 'padrao', rotulo: 'Padrão construtivo', escolha: 'uma', valores: ['Popular', 'Baixo', 'Médio', 'Alto'] } },
+        { opcoes: { id: 'conservacao', rotulo: 'Conservação', escolha: 'uma', valores: ['Ótimo', 'Bom', 'Regular', 'Ruim', 'Péssimo'] } },
+        { campos: [{ id: 'pavimentos', rotulo: 'Nº de pavimentos', largura: 0.151, tipo: 'numero' },
+          { id: 'unidades', rotulo: 'Nº de unidades no lote', largura: 0.162, tipo: 'numero' },
+          { id: 'area_terreo', rotulo: 'Área térreo (m²)', largura: 0.156, tipo: 'numero' },
+          { id: 'area_superiores', rotulo: 'Área pav. superiores (m²)', largura: 0.181, tipo: 'numero' },
+          { id: 'area_anexos', rotulo: 'Área anexos (m²)', largura: 0.149, tipo: 'numero' },
+          { id: 'area_total', rotulo: 'Área construída total (m²)', largura: 0.201, tipo: 'numero', calculado: true }] },
+      ] },
+      { id: 'informante', titulo: 'INFORMANTE E DOCUMENTAÇÃO', curto: 'Informante', nota: 'nunca exigir documento do ocupante', pagina: 2, linhas: [
+        { campos: [{ id: 'nome_informante', rotulo: 'Nome informado verbalmente pelo ocupante', largura: 1 }] },
+        { opcoes: { id: 'vinculo', rotulo: 'Vínculo do informante', escolha: 'uma',
+          valores: ['Proprietário', 'Inquilino', 'Familiar', 'Vizinho', 'Sem informante'] } },
+        { opcoes: { id: 'documento', rotulo: 'Documento', escolha: 'uma', valores: ['Não apresentado', 'Apresentado espontaneamente'], outro: 'Qual' } },
+        { grade: { id: 'resultado', escolha: 'uma', colunas: 2, valores: [
+          'Confirmado em campo sem documentação apresentada', 'Confirmado com documento apresentado espontaneamente',
+          'Imóvel fechado ou sem informante (agendar retorno)', 'Acesso negado pelo ocupante'] } },
+      ] },
+      { id: 'fotos', titulo: 'REGISTRO FOTOGRÁFICO', curto: 'Fotos', nota: 'fachada sempre; lateral e fundos quando visíveis', pagina: 2, linhas: [
+        { campos: [{ id: 'foto_fachada', rotulo: 'Foto da fachada (nº)', largura: 0.25 }, { id: 'foto_lateral', rotulo: 'Lateral / fundos (nº)', largura: 0.25 },
+          { id: 'imagem_360', rotulo: 'Imagem 360° (ID)', largura: 0.25 }, { id: 'outras_fotos', rotulo: 'Outras fotos (nº)', largura: 0.25 }] },
+      ] },
+      { id: 'croqui', titulo: 'CROQUI DO LOTE E DA EDIFICAÇÃO', curto: 'Croqui',
+        nota: 'indicar logradouro, medidas, pavimentos e confrontantes (quadrícula de 5 mm)', pagina: 2, linhas: [{ croqui: true }] },
+      { id: 'observacoes', titulo: 'OBSERVAÇÕES', curto: 'Observações', pagina: 2, linhas: [
+        { campos: [{ id: 'observacoes', rotulo: 'Observações', largura: 1, tipo: 'longo' }] },
+      ] },
+      { id: 'escritorio', titulo: 'CONFERÊNCIA NO ESCRITÓRIO', curto: 'Escritório', escritorio: true, pagina: 2, linhas: [
+        { campos: [{ id: 'conferido_por', rotulo: 'Conferido por', largura: 0.6 }, { id: 'data_conferencia', rotulo: 'Data', largura: 0.4 }] },
+        { opcoes: { id: 'escritorio_status', rotulo: 'Situação', escolha: 'varias', valores: ['Lançado no SIGWEB', 'Retorno a campo'] } },
+      ] },
+    ],
+  };
+
+  // ------------------------------------------------------------------ números
+  function numero(s) {
+    var v = String(s == null ? '' : s).trim();
+    if (!v) return null;
+    if (/^[-+]?\d{1,3}(\.\d{3})+(,\d+)?$/.test(v)) v = v.replace(/\./g, '').replace(',', '.');
+    else v = v.replace(',', '.');
+    var r = parseFloat(v);
+    return isNaN(r) ? null : r;
+  }
+
+  function formatar(v, casas) {
+    casas = casas == null ? 2 : casas;
+    var f = Math.pow(10, casas);
+    var r = Math.round(Math.abs(v) * f + 1e-9) / f;
+    var partes = r.toFixed(casas).split('.');
+    return (v < 0 && r > 0 ? '-' : '') + partes[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.') + (casas ? ',' + partes[1] : '');
+  }
+
+  function areaConstruidaTotal(dados) {
+    var partes = ['area_terreo', 'area_superiores', 'area_anexos'].map(function (k) { return numero(dados[k]); });
+    if (partes.every(function (p) { return p == null; })) return null;
+    return partes.reduce(function (s, p) { return s + (p || 0); }, 0);
+  }
+
+  // ------------------------------------------------------------------ andamento
+  function idsDaLinha(l) {
+    if (l.campos) return l.campos.map(function (c) { return c.id; });
+    if (l.opcoes) return [l.opcoes.id];
+    if (l.grade) return [l.grade.id];
+    return [];
+  }
+  function preenchido(v) {
+    if (Array.isArray(v)) return v.length > 0;
+    return v != null && String(v).trim() !== '';
+  }
+
+  /* quantas partes da ficha já têm algo (o escritório fica de fora) */
+  function andamento(modelo, dados, temLevantamento) {
+    dados = dados || {};
+    var secoes = modelo.secoes.filter(function (s) { return !s.escritorio; }).map(function (s) {
+      var ids = [], croqui = false;
+      s.linhas.forEach(function (l) { ids = ids.concat(idsDaLinha(l)); if (l.croqui) croqui = true; });
+      var feitos = ids.filter(function (id) { return preenchido(dados[id]); }).length + (croqui && temLevantamento ? 1 : 0);
+      return { id: s.id, titulo: s.curto || s.titulo, preenchidos: feitos, total: ids.length + (croqui ? 1 : 0) };
+    });
+    return { secoes: secoes, total: secoes.length, feitas: secoes.filter(function (s) { return s.preenchidos > 0; }).length };
+  }
+
+  // ------------------------------------------------------------------ do levantamento para a ficha
+  /*
+   * Preenche o que o levantamento sabe: área do terreno, testada (o lado da
+   * frente), a coordenada da testada (o meio do lado da frente), a área térrea
+   * (as edificações) e a área construída total. Só escreve num campo vazio ou
+   * num que o próprio app preencheu antes (auto[campo]): o que a pessoa
+   * digitou fica.
+   */
+  function preencherDoLevantamento(dados, auto, lev, frente) {
+    function definir(campo, valor) {
+      var atual = dados[campo];
+      if (atual == null || String(atual).trim() === '' || auto[campo]) { dados[campo] = valor; auto[campo] = true; }
+    }
+    if (lev && lev.lote) {
+      definir('area_terreno', formatar(lev.lote.area));
+      var lado = frente != null ? lev.lote.lados[frente] : null;
+      if (lado) {
+        var v = lev.lote.vertices, a = v[frente], b = v[(frente + 1) % v.length];
+        definir('testada_principal', formatar(lado.d));
+        definir('coord_e', formatar((a.e + b.e) / 2));
+        definir('coord_n', formatar((a.n + b.n) / 2));
+      }
+    }
+    if (lev && lev.edificacoes && lev.edificacoes.length) {
+      definir('area_terreo', formatar(lev.edificacoes.reduce(function (s, ed) { return s + ed.area; }, 0)));
+    }
+    var total = areaConstruidaTotal(dados);
+    if (total != null) definir('area_total', formatar(total));
+    return dados;
+  }
+
+  // ------------------------------------------------------------------ ficha nova e arquivo
+  function n2(k) { return (k < 10 ? '0' : '') + k; }
+
+  function dadosIniciais(item, opcoes) {
+    var agora = opcoes.agora || new Date();
+    var d = {
+      numero_ficha: String(opcoes.numeroFicha || ''),
+      data: n2(agora.getDate()) + '/' + n2(agora.getMonth() + 1) + '/' + agora.getFullYear(),
+      hora: n2(agora.getHours()) + ':' + n2(agora.getMinutes()),
+      tecnico: opcoes.tecnico || '', auxiliar: opcoes.auxiliar || '',
+      id_vetorizacao: item && item.numero ? String(item.numero) : '',
+    };
+    return d;
+  }
+
+  function nomeDoArquivo(ficha) {
+    var d = (ficha && ficha.dados) || {};
+    var limpo = function (s) { return String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^\w-]+/g, '_').replace(/^_+|_+$/g, ''); };
+    var num = d.numero_ficha ? limpo(d.numero_ficha) : 'SEM_NUMERO';
+    var lote = d.id_vetorizacao || (ficha && ficha.numero) || 'SEM_ID';
+    return 'FICHA_' + num + '_LOTE_' + limpo(lote) + '.pdf';
+  }
+
+  return {
+    PALMEIRA: PALMEIRA, numero: numero, formatar: formatar, areaConstruidaTotal: areaConstruidaTotal,
+    andamento: andamento, preencherDoLevantamento: preencherDoLevantamento, dadosIniciais: dadosIniciais,
+    nomeDoArquivo: nomeDoArquivo, idsDaLinha: idsDaLinha, preenchido: preenchido,
+  };
+});
+
+</script>
+<script>
+/* Logo da Caroá Topografia e Agrimensura (tirado da ficha de campo de Palmeira), para o cabeçalho do PDF da ficha. 600 x 235 px. */
+window.LOGO_CAROA = { dados: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAQDAwMDAgQDAwMEBAQFBgoGBgUFBgwICQcKDgwPDg4MDQ0PERYTDxAVEQ0NExoTFRcYGRkZDxIbHRsYHRYYGRj/2wBDAQQEBAYFBgsGBgsYEA0QGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBj/wAARCADrAlgDASIAAhEBAxEB/8QAHQABAAIDAQEBAQAAAAAAAAAAAAYHBAUIAwIBCf/EAF0QAAEDAwEEBAgKBQcIBwYHAAECAwQABREGBxIhMRNBUWEIFBYiMnGB0hVCUlVWkZSWobEjYnKCkhczNUNTc8EkOHWio7Kz0QkYJTdjdIM0dpPCw/EmNkRktOHi/8QAGwEBAAIDAQEAAAAAAAAAAAAAAAQFAgMGAQf/xABDEQABAwICBgUKBAQFBQEAAAABAAIDBBEhMQUSQVFhcRNSgZGhBhQVIjJTorHB0kJy0fAjYpLhBzNDgsIWJLLT8TT/2gAMAwEAAhEDEQA/AO/qUpREpSlESlKURKUpREpSlESlKURKUpRFBdpeplabTpXcf6Lx/UMSEvjzQoq3vyFTocq5i8LbURttw0NEaUd9iau5qAPW2UBP5qrpmO83IityGlbyHEhaT2gjI/OtLH3e5u6ysqql6Okgm62t4FelKUrcq1KUpREpSlESlKURKUpREpSlESlKURKUpREpSlESlKURKUpREpSlESlKURKUpREpSlESlKURKUpREpSlESlKURKUpREpSlESlKURKUpREpSlESlKURKUpREpSlESlKURKUpREpSlESlKURKUpREpSlESlKURKUpREpSlESlKHlRFw94W108e24R7aFcINsbb4dSnFKWfwKa612Y3QXrY1pe5hW8XrYwVE9ZCAk/iDXCm3S6m8eEPqqVvbyW5niyT3NJS3/8ALXXPgy3T4S8HCzNlW8qE4/EV3brpUB9ShVfTvvM5drpul6PRNOerbxFz4q3qUpVguKSlKURKUpREpSlESlKURKUpREpSlESlKURKUpREpSlESlKURKUpREpSlESlKURKUpREpSlESlKURKUpREpSlESlKURKUpREpSlESlKURKUpREpSlESlKURKUpREpSlESlKURKUpREpSlESlKURKUpREpStfc73arO3v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', largura: 600, altura: 235 };
+
+</script>
+<script>
+/*
+ * Caroá Maps — o DESENHO da ficha (1.2): o croqui (na tela, num canvas, e no
+ * PDF, com o jsPDF) e o PDF da ficha de campo no jeito do papel, montado a
+ * partir do modelo (ficha_modelo.js). Só no navegador: window.FichaPDF.
+ */
+(function () {
+  'use strict';
+  var PT_POR_MM = 2.8346;
+  var M = 9, LARGURA = 192, DIREITA = M + LARGURA;
+  var CINZA_LINHA = [154, 160, 166], CINZA_TEXTO = [93, 99, 107], PRETO = [22, 24, 27];
+
+  /* jsPDF com as fontes padrão escreve só o Latin-1: troca o que fica fora. */
+  function pdfTexto(s) {
+    return String(s == null ? '' : s).replace(/[–—]/g, '-').replace(/[‘’]/g, "'").replace(/[“”]/g, '"')
+      .replace(/…/g, '...').replace(/•/g, '·').replace(/→/g, '->').replace(/[^\x00-\xff]/g, '');
+  }
+
+  // ================================================================ o croqui
+  var ESTILOS = {
+    medida: { fonte: 'normal', cor: [17, 17, 17] },
+    'medida-edificacao': { fonte: 'normal', cor: [70, 70, 70] },
+    confrontante: { fonte: 'italic', cor: [70, 70, 70] },
+    logradouro: { fonte: 'bold', cor: [17, 17, 17] },
+    vertice: { fonte: 'bold', cor: [155, 52, 56] },
+    area: { fonte: 'bold', cor: [17, 17, 17] },
+    edificacao: { fonte: 'normal', cor: [40, 40, 40] },
+    legenda: { fonte: 'normal', cor: [93, 99, 107], esquerda: true },
+    aviso: { fonte: 'italic', cor: [93, 99, 107] },
+  };
+  function estilo(it) { return ESTILOS[it.estilo] || ESTILOS.medida; }
+  function rgb(c) { return 'rgb(' + c.join(',') + ')'; }
+
+  /* No canvas: `px` pixels por mm. */
+  function croquiNoCanvas(ctx, desenho, px, comGrade) {
+    var W = desenho.largura * px, H = desenho.altura * px;
+    ctx.save();
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, W, H);
+    if (comGrade !== false) {
+      ctx.strokeStyle = '#e3e6ea';
+      ctx.lineWidth = 1;
+      for (var g = 0; g <= desenho.largura; g += 5) { ctx.beginPath(); ctx.moveTo(g * px, 0); ctx.lineTo(g * px, H); ctx.stroke(); }
+      for (g = 0; g <= desenho.altura; g += 5) { ctx.beginPath(); ctx.moveTo(0, g * px); ctx.lineTo(W, g * px); ctx.stroke(); }
+    }
+    desenho.itens.forEach(function (it) {
+      if (it.tipo === 'poligono') {
+        ctx.beginPath();
+        it.pontos.forEach(function (p, i) { if (i) ctx.lineTo(p[0] * px, p[1] * px); else ctx.moveTo(p[0] * px, p[1] * px); });
+        ctx.closePath();
+        if (it.estilo === 'edificacao') {
+          ctx.fillStyle = 'rgba(160,166,174,.45)';
+          ctx.fill();
+          ctx.lineWidth = Math.max(1, 0.35 * px);
+          ctx.strokeStyle = '#3a3f45';
+        } else {
+          ctx.lineWidth = Math.max(1.5, 0.55 * px);
+          ctx.strokeStyle = '#111';
+        }
+        ctx.stroke();
+      } else if (it.tipo === 'ponto') {
+        ctx.beginPath();
+        ctx.arc(it.x * px, it.y * px, Math.max(2, it.r * px), 0, Math.PI * 2);
+        ctx.fillStyle = '#9b3438';
+        ctx.fill();
+      } else if (it.tipo === 'texto') {
+        var e = estilo(it);
+        ctx.save();
+        ctx.translate(it.x * px, it.y * px);
+        ctx.rotate(-it.angulo * Math.PI / 180);
+        ctx.font = (e.fonte === 'bold' ? 'bold ' : e.fonte === 'italic' ? 'italic ' : '') + Math.max(9, it.tam * px * 1.05) + 'px sans-serif';
+        ctx.fillStyle = rgb(e.cor);
+        ctx.textAlign = e.esquerda ? 'left' : 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(it.texto, 0, 0);
+        ctx.restore();
+      } else if (it.tipo === 'norte') {
+        norteNoCanvas(ctx, it, px);
+      } else if (it.tipo === 'escala') {
+        var x = it.x * px, y = it.y * px, c = it.comprimento * px, h = 1.6 * px;
+        ctx.fillStyle = '#111';
+        ctx.fillRect(x, y, c / 2, h);
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(x + c / 2, y, c / 2, h);
+        ctx.strokeStyle = '#111';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(x, y, c, h);
+        ctx.fillStyle = '#333';
+        ctx.font = Math.max(9, 2.2 * px) + 'px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+        ctx.fillText('0', x, y + h + 1);
+        ctx.fillText(String(it.metros / 2).replace('.', ','), x + c / 2, y + h + 1);
+        ctx.fillText(it.metros + ' m', x + c, y + h + 1);
+      }
+    });
+    ctx.restore();
+  }
+
+  function norteNoCanvas(ctx, it, px) {
+    var x = it.x * px, y = it.y * px, t = it.tam * px;
+    ctx.beginPath();
+    ctx.moveTo(x, y - t / 2); ctx.lineTo(x - t * 0.22, y + t * 0.32); ctx.lineTo(x, y + t * 0.14); ctx.closePath();
+    ctx.fillStyle = '#111'; ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(x, y - t / 2); ctx.lineTo(x + t * 0.22, y + t * 0.32); ctx.lineTo(x, y + t * 0.14); ctx.closePath();
+    ctx.fillStyle = '#fff'; ctx.fill(); ctx.strokeStyle = '#111'; ctx.lineWidth = 1; ctx.stroke();
+    ctx.fillStyle = '#111';
+    ctx.font = 'bold ' + Math.max(10, t * 0.32) + 'px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'bottom';
+    ctx.fillText('N', x, y - t / 2 - 1);
+  }
+
+  /* Texto do jsPDF centrado em (x, y) e girado `angulo` graus (anti-horário). */
+  function textoGirado(doc, t, x, y, tamPt, angulo, esquerda) {
+    var a = (angulo || 0) * Math.PI / 180;
+    var w = esquerda ? 0 : doc.getTextWidth(t);
+    var h = tamPt / PT_POR_MM;
+    var dx = Math.cos(a), dy = -Math.sin(a), bx = Math.sin(a), by = Math.cos(a);
+    var sx = x - dx * w / 2 + bx * h * 0.35, sy = y - dy * w / 2 + by * h * 0.35;
+    doc.text(t, sx, sy, angulo ? { angle: angulo } : undefined);
+  }
+
+  function poligonoNoPdf(doc, pontos, x0, y0, estiloPreench) {
+    var d = [];
+    for (var i = 1; i < pontos.length; i++) d.push([pontos[i][0] - pontos[i - 1][0], pontos[i][1] - pontos[i - 1][1]]);
+    doc.lines(d, x0 + pontos[0][0], y0 + pontos[0][1], [1, 1], estiloPreench, true);
+  }
+
+  /* No PDF: o quadro do croqui começa em (x0, y0) mm. */
+  function croquiNoPdf(doc, desenho, x0, y0, comGrade) {
+    if (comGrade !== false) {
+      doc.setDrawColor(223, 227, 232);
+      doc.setLineWidth(0.1);
+      for (var g = 5; g < desenho.largura; g += 5) doc.line(x0 + g, y0, x0 + g, y0 + desenho.altura);
+      for (g = 5; g < desenho.altura; g += 5) doc.line(x0, y0 + g, x0 + desenho.largura, y0 + g);
+    }
+    desenho.itens.forEach(function (it) {
+      if (it.tipo === 'poligono') {
+        if (it.estilo === 'edificacao') {
+          doc.setFillColor(205, 209, 214);
+          doc.setDrawColor(58, 63, 69);
+          doc.setLineWidth(0.35);
+          poligonoNoPdf(doc, it.pontos, x0, y0, 'FD');
+        } else {
+          doc.setDrawColor(17, 17, 17);
+          doc.setLineWidth(0.55);
+          poligonoNoPdf(doc, it.pontos, x0, y0, 'S');
+        }
+      } else if (it.tipo === 'ponto') {
+        doc.setFillColor(155, 52, 56);
+        doc.circle(x0 + it.x, y0 + it.y, it.r, 'F');
+      } else if (it.tipo === 'texto') {
+        var e = estilo(it);
+        var pt = it.tam * PT_POR_MM;
+        doc.setFont('helvetica', e.fonte);
+        doc.setFontSize(pt);
+        doc.setTextColor(e.cor[0], e.cor[1], e.cor[2]);
+        textoGirado(doc, pdfTexto(it.texto), x0 + it.x, y0 + it.y, pt, it.angulo, e.esquerda);
+      } else if (it.tipo === 'norte') {
+        var x = x0 + it.x, y = y0 + it.y, t = it.tam;
+        doc.setFillColor(17, 17, 17);
+        doc.setDrawColor(17, 17, 17);
+        doc.setLineWidth(0.2);
+        doc.triangle(x, y - t / 2, x - t * 0.22, y + t * 0.32, x, y + t * 0.14, 'F');
+        doc.setFillColor(255, 255, 255);
+        doc.triangle(x, y - t / 2, x + t * 0.22, y + t * 0.32, x, y + t * 0.14, 'FD');
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(9);
+        doc.setTextColor(17, 17, 17);
+        doc.text('N', x, y - t / 2 - 1.2, { align: 'center' });
+      } else if (it.tipo === 'escala') {
+        var ex = x0 + it.x, ey = y0 + it.y, c = it.comprimento;
+        doc.setDrawColor(17, 17, 17);
+        doc.setLineWidth(0.2);
+        doc.setFillColor(17, 17, 17);
+        doc.rect(ex, ey, c / 2, 1.6, 'F');
+        doc.rect(ex, ey, c, 1.6, 'S');
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(6.5);
+        doc.setTextColor(51, 51, 51);
+        doc.text('0', ex, ey + 4.3, { align: 'center' });
+        doc.text(String(it.metros / 2).replace('.', ','), ex + c / 2, ey + 4.3, { align: 'center' });
+        doc.text(it.metros + ' m', ex + c, ey + 4.3, { align: 'center' });
+      }
+    });
+  }
+
+  // ================================================================ a ficha em PDF
+  function cor(doc, c, tipo) {
+    if (tipo === 'texto') doc.setTextColor(c[0], c[1], c[2]);
+    else if (tipo === 'fundo') doc.setFillColor(c[0], c[1], c[2]);
+    else doc.setDrawColor(c[0], c[1], c[2]);
+  }
+  function fonte(doc, peso, pt, c) {
+    doc.setFont('helvetica', peso);
+    doc.setFontSize(pt);
+    cor(doc, c || PRETO, 'texto');
+  }
+
+  function cabecalho(doc, modelo, titulo) {
+    if (window.LOGO_CAROA) {
+      var l = window.LOGO_CAROA;
+      doc.addImage(l.dados, 'JPEG', M, 6.5, 34, 34 * l.altura / l.largura, 'logo_caroa');
+    }
+    fonte(doc, 'bold', 9.5);
+    doc.text(pdfTexto(modelo.cabecalho.prefeitura), DIREITA, 10.5, { align: 'right' });
+    fonte(doc, 'normal', 7.6, [60, 64, 70]);
+    modelo.cabecalho.linhas.forEach(function (t, i) { doc.text(pdfTexto(t), DIREITA, 14 + i * 3.3, { align: 'right' }); });
+    cor(doc, PRETO, 'fundo');
+    doc.rect(M, 22, LARGURA, 8, 'F');
+    fonte(doc, 'bold', 11, [255, 255, 255]);
+    doc.text(pdfTexto(titulo || modelo.titulo), M + 3, 27.4);
+    return 33;
+  }
+
+  function rodape(doc, modelo, direita) {
+    cor(doc, [201, 204, 209]);
+    doc.setLineWidth(0.2);
+    doc.line(M, 284, DIREITA, 284);
+    fonte(doc, 'normal', 6.3, CINZA_TEXTO);
+    modelo.rodape.forEach(function (t, i) { doc.text(pdfTexto(t), M, 287 + i * 3, { maxWidth: LARGURA }); });
+    if (direita) doc.text(pdfTexto(direita), DIREITA, 293, { align: 'right' });
+  }
+
+  function barraDaSecao(doc, y, titulo, nota) {
+    cor(doc, [236, 238, 241], 'fundo');
+    doc.rect(M, y, LARGURA, 6, 'F');
+    cor(doc, [29, 111, 206], 'fundo');
+    doc.rect(M, y, 1.2, 6, 'F');
+    fonte(doc, 'bold', 8.6);
+    doc.text(pdfTexto(titulo), M + 3, y + 4.2);
+    if (nota) {
+      fonte(doc, 'italic', 6.8, CINZA_TEXTO);
+      doc.text(pdfTexto(nota), DIREITA - 2, y + 4.2, { align: 'right' });
+    }
+    return y + 6.8;
+  }
+
+  function caixinha(doc, x, y, marcada) {
+    cor(doc, [120, 126, 133]);
+    doc.setLineWidth(0.2);
+    doc.rect(x, y, 2.8, 2.8, 'S');
+    if (marcada) {
+      cor(doc, [17, 17, 17]);
+      doc.setLineWidth(0.5);
+      doc.line(x + 0.5, y + 1.5, x + 1.2, y + 2.3);
+      doc.line(x + 1.2, y + 2.3, x + 2.5, y + 0.4);
+    }
+  }
+
+  function valorDe(dados, id) { var v = dados[id]; return v == null ? '' : v; }
+  function marcado(dados, id, valor) {
+    var v = dados[id];
+    return Array.isArray(v) ? v.indexOf(valor) >= 0 : v === valor;
+  }
+
+  function linhaDeCampos(doc, y, linha, dados, altura) {
+    var h = altura || 9.5, x = M;
+    linha.campos.forEach(function (c) {
+      var w = c.largura * LARGURA;
+      cor(doc, CINZA_LINHA);
+      doc.setLineWidth(0.2);
+      doc.rect(x, y, w, h, 'S');
+      fonte(doc, 'normal', 6.3, CINZA_TEXTO);
+      doc.text(pdfTexto(c.rotulo), x + 1.2, y + 2.7);
+      var v = pdfTexto(valorDe(dados, c.id));
+      if (v) {
+        var pt = 9;
+        fonte(doc, 'normal', pt);
+        while (pt > 6 && doc.getTextWidth(v) > w - 2.6) { pt -= 0.5; doc.setFontSize(pt); }
+        doc.text(doc.splitTextToSize(v, w - 2.6)[0], x + 1.4, y + h - 2);
+      }
+      x += w;
+    });
+    return y + h;
+  }
+
+  /* As caixinhas de uma escolha numa linha só (quebra se não couber). */
+  function linhaDeOpcoes(doc, y, o, dados) {
+    fonte(doc, 'bold', 7.8);
+    var colRotulo = Math.max(30, doc.getTextWidth(pdfTexto(o.rotulo)) + 4);
+    fonte(doc, 'normal', 7.8);
+    var posicoes = [], cx = M + colRotulo, linhaN = 0;
+    var itens = o.valores.map(function (v) { return { t: v, w: 3.8 + doc.getTextWidth(pdfTexto(v)) + 3.6, outro: false }; });
+    if (o.outro) {
+      var txt = valorDe(dados, o.id + '_outro');
+      itens.push({ t: o.outro + ':', w: Math.max(42, doc.getTextWidth(pdfTexto(o.outro + ': ' + txt)) + 8), outro: true, valor: txt });
+    }
+    itens.forEach(function (it) {
+      if (cx + it.w > DIREITA - 1 && cx > M + colRotulo) { linhaN++; cx = M + colRotulo; }
+      posicoes.push({ it: it, x: cx, linha: linhaN });
+      cx += it.w;
+    });
+    var h = 6 + linhaN * 5;
+    cor(doc, CINZA_LINHA);
+    doc.setLineWidth(0.2);
+    doc.rect(M, y, LARGURA, h, 'S');
+    fonte(doc, 'bold', 7.8);
+    doc.text(pdfTexto(o.rotulo), M + 1.6, y + 4.1);
+    posicoes.forEach(function (p) {
+      var yy = y + p.linha * 5;
+      fonte(doc, 'normal', 7.8);
+      if (p.it.outro) {
+        doc.text(pdfTexto(p.it.t), p.x, yy + 4.1);
+        var x1 = p.x + doc.getTextWidth(pdfTexto(p.it.t)) + 1.2;
+        cor(doc, [120, 126, 133]);
+        doc.setLineWidth(0.15);
+        doc.line(x1, yy + 4.6, Math.min(DIREITA - 2, p.x + p.it.w - 2), yy + 4.6);
+        if (p.it.valor) { fonte(doc, 'normal', 8.2); doc.text(pdfTexto(p.it.valor), x1 + 0.8, yy + 4.0); }
+      } else {
+        caixinha(doc, p.x, yy + 1.6, marcado(dados, o.id, p.it.t));
+        doc.text(pdfTexto(p.it.t), p.x + 3.8, yy + 4.1);
+      }
+    });
+    return y + h;
+  }
+
+  function linhaDeGrade(doc, y, g, dados) {
+    var cols = g.colunas || 2, w = LARGURA / cols, linhas = Math.ceil(g.valores.length / cols);
+    for (var i = 0; i < g.valores.length; i++) {
+      var c = i % cols, l = Math.floor(i / cols), x = M + c * w, yy = y + l * 6;
+      cor(doc, CINZA_LINHA);
+      doc.setLineWidth(0.2);
+      doc.rect(x, yy, w, 6, 'S');
+      caixinha(doc, x + 1.6, yy + 1.6, marcado(dados, g.id, g.valores[i]));
+      fonte(doc, 'normal', 7.8);
+      doc.text(pdfTexto(g.valores[i]), x + 5.4, yy + 4.1);
+    }
+    return y + linhas * 6;
+  }
+
+  function secaoNoPdf(doc, y, s, dados, extra) {
+    if (s.titulo) y = barraDaSecao(doc, y, s.titulo, s.nota);
+    s.linhas.forEach(function (l) {
+      if (l.campos && l.campos[0].tipo === 'longo') {
+        var h = extra.alturaObs || 22;
+        cor(doc, CINZA_LINHA);
+        doc.setLineWidth(0.2);
+        doc.rect(M, y, LARGURA, h, 'S');
+        cor(doc, [226, 229, 233]);
+        for (var k = 5.5; k < h; k += 5.5) doc.line(M + 2, y + k, DIREITA - 2, y + k);
+        fonte(doc, 'normal', 8.6);
+        var linhas = doc.splitTextToSize(pdfTexto(valorDe(dados, l.campos[0].id)), LARGURA - 4);
+        doc.text(linhas.slice(0, Math.floor(h / 5.5)), M + 2, y + 4.4, { lineHeightFactor: 1.82 });
+        y += h;
+      } else if (l.campos) {
+        y = linhaDeCampos(doc, y, l, dados);
+      } else if (l.opcoes) {
+        y = linhaDeOpcoes(doc, y, l.opcoes, dados);
+      } else if (l.grade) {
+        y = linhaDeGrade(doc, y, l.grade, dados);
+      } else if (l.nota) {
+        fonte(doc, 'italic', 6.5, CINZA_TEXTO);
+        doc.text(pdfTexto(l.nota), M + 1, y + 3.3);
+        y += 4.4;
+      } else if (l.croqui) {
+        var hq = extra.alturaCroqui || 130;
+        cor(doc, CINZA_LINHA);
+        doc.setLineWidth(0.25);
+        doc.rect(M, y, LARGURA, hq, 'S');
+        if (extra.croqui) {
+          croquiNoPdf(doc, extra.croqui, M, y, true);
+        } else {
+          croquiNoPdf(doc, { largura: LARGURA, altura: hq, itens: [{ tipo: 'norte', x: LARGURA - 9, y: 12, tam: 10 }] }, M, y, true);
+        }
+        y += hq;
+      }
+    });
+    return y + 1.6;
+  }
+
+  function assinaturas(doc, y, dados) {
+    var h = 21, meio = M + LARGURA * 0.5;
+    cor(doc, CINZA_LINHA);
+    doc.setLineWidth(0.2);
+    doc.rect(M, y, LARGURA * 0.5, h, 'S');
+    doc.rect(meio, y, LARGURA * 0.5, h, 'S');
+    fonte(doc, 'normal', 6.3, CINZA_TEXTO);
+    doc.text('Técnico de campo', M + 1.2, y + 2.8);
+    doc.text(pdfTexto('Conferência no escritório'), meio + 1.2, y + 2.8);
+    fonte(doc, 'normal', 9);
+    if (dados.tecnico) doc.text(pdfTexto(dados.tecnico), M + LARGURA * 0.25, y + 13.4, { align: 'center' });
+    cor(doc, [120, 126, 133]);
+    doc.setLineWidth(0.2);
+    doc.line(M + 8, y + 15, M + LARGURA * 0.5 - 8, y + 15);
+    fonte(doc, 'normal', 6.5, CINZA_TEXTO);
+    doc.text('assinatura', M + LARGURA * 0.25, y + 18.2, { align: 'center' });
+    fonte(doc, 'normal', 7.8);
+    doc.text('Conferido por:', meio + 2, y + 8);
+    doc.text('Data:', meio + 2, y + 15.5);
+    cor(doc, [120, 126, 133]);
+    doc.setLineWidth(0.15);
+    doc.line(meio + 21, y + 8.5, DIREITA - 2, y + 8.5);
+    doc.line(meio + 10, y + 16, meio + 31, y + 16);
+    fonte(doc, 'normal', 8.4);
+    if (dados.conferido_por) doc.text(pdfTexto(dados.conferido_por), meio + 22, y + 7.9);
+    if (dados.data_conferencia) doc.text(pdfTexto(dados.data_conferencia), meio + 11, y + 15.4);
+    fonte(doc, 'normal', 7.8);
+    caixinha(doc, meio + 34, y + 13.4, marcado(dados, 'escritorio_status', 'Lançado no SIGWEB'));
+    doc.text(pdfTexto('Lançado no SIGWEB'), meio + 37.8, y + 15.9);
+    caixinha(doc, meio + 66, y + 13.4, marcado(dados, 'escritorio_status', 'Retorno a campo'));
+    doc.text('Retorno a campo', meio + 69.8, y + 15.9);
+    return y + h;
+  }
+
+  function n2(k) { return (k < 10 ? '0' : '') + k; }
+  function quando(iso) {
+    var d = new Date(iso);
+    return n2(d.getDate()) + '/' + n2(d.getMonth() + 1) + '/' + d.getFullYear() + ' ' + n2(d.getHours()) + ':' + n2(d.getMinutes());
+  }
+
+  function anexo(doc, modelo, ficha, lev, mapa, fm) {
+    var y = cabecalho(doc, modelo, 'ANEXO · LEVANTAMENTO DO LOTE');
+    var levDados = ficha.levantamento || {};
+    fonte(doc, 'normal', 7.8, CINZA_TEXTO);
+    doc.text(pdfTexto('Arquivo: ' + (levDados.arquivo || '-') + (levDados.importado_em ? ' · importado em ' + quando(levDados.importado_em) : '') +
+      ' · SIRGAS 2000 / UTM ' + lev.zona + 'S · lote ' + (ficha.dados.id_vetorizacao || ficha.numero || '-') + ' · ficha nº ' +
+      (ficha.dados.numero_ficha || '-')), M, y + 1.5);
+    y += 4;
+    if (mapa) {
+      y = barraDaSecao(doc, y, 'SITUAÇÃO SOBRE A ORTOFOTO', 'amarelo: lote da vetorização · magenta: lote levantado · laranja: edificação levantada');
+      var hm = LARGURA * mapa.height / mapa.width;
+      doc.addImage(mapa.toDataURL('image/jpeg', 0.84), 'JPEG', M, y, LARGURA, hm);
+      cor(doc, CINZA_LINHA);
+      doc.setLineWidth(0.25);
+      doc.rect(M, y, LARGURA, hm, 'S');
+      y += hm + 2;
+    }
+    y = barraDaSecao(doc, y, 'LADOS DO LOTE', lev.lote ? 'área ' + fm(lev.lote.area) + ' m² · perímetro ' + fm(lev.lote.perimetro) + ' m' : '');
+    var conf = levDados.confrontantes || {};
+    function linhaTabela(cols, larguras, yy, cabecalhoT) {
+      var x = M;
+      cols.forEach(function (t, i) {
+        cor(doc, CINZA_LINHA);
+        doc.setLineWidth(0.15);
+        if (cabecalhoT) { cor(doc, [236, 238, 241], 'fundo'); doc.rect(x, yy, larguras[i], 4.8, 'FD'); } else doc.rect(x, yy, larguras[i], 4.8, 'S');
+        fonte(doc, cabecalhoT ? 'bold' : 'normal', 7.4);
+        doc.text(doc.splitTextToSize(pdfTexto(t), larguras[i] - 2)[0] || '', x + 1.2, yy + 3.4);
+        x += larguras[i];
+      });
+      return yy + 4.8;
+    }
+    if (lev.lote) {
+      var lw = [22, 30, 34, LARGURA - 86];
+      y = linhaTabela(['Lado', 'De -> Para', 'Distância (m)', 'Confrontante / logradouro'], lw, y, true);
+      lev.lote.lados.forEach(function (l, i) {
+        var c = levDados.frente === i ? (ficha.dados.logradouro || 'frente (rua)') + ' · frente' : (conf[i] || '');
+        y = linhaTabela([String(i + 1), l.de + ' -> ' + l.para, fm(l.d), c], lw, y);
+      });
+    }
+    (lev.edificacoes || []).forEach(function (ed, k) {
+      fonte(doc, 'normal', 7.6, CINZA_TEXTO);
+      doc.text(pdfTexto('Edificação ' + (k + 1) + ' (' + ed.codigo + '): área ' + fm(ed.area) + ' m² · perímetro ' + fm(ed.perimetro) + ' m'), M, y + 3.6);
+      y += 4.6;
+    });
+    y += 2;
+    y = barraDaSecao(doc, y, 'PONTOS DO LEVANTAMENTO', lev.pontos.length + ' ponto(s)');
+    var pw = [26, 34, 36, 20, 50, LARGURA - 166];
+    y = linhaTabela(['Ponto', 'E (m)', 'N (m)', 'Z (m)', 'Código', 'Parte'], pw, y, true);
+    lev.pontos.forEach(function (p) {
+      if (y > 276) {
+        rodape(doc, modelo);
+        doc.addPage();
+        y = cabecalho(doc, modelo, 'ANEXO · LEVANTAMENTO DO LOTE (continuação)');
+        y = linhaTabela(['Ponto', 'E (m)', 'N (m)', 'Z (m)', 'Código', 'Parte'], pw, y, true);
+      }
+      var parte = p.categoria === 'lote' ? 'lote' : p.categoria === 'edificacao' ? 'edificação' : '-';
+      y = linhaTabela([p.nome, fm(p.e, 3), fm(p.n, 3), p.z == null ? '' : fm(p.z, 3), p.codigo, parte], pw, y);
+    });
+    if (lev.avisos && lev.avisos.length) {
+      y += 3;
+      fonte(doc, 'italic', 7.4, [140, 60, 0]);
+      lev.avisos.forEach(function (a) {
+        var ls = doc.splitTextToSize(pdfTexto('! ' + a), LARGURA);
+        if (y + ls.length * 3.4 > 280) return;
+        doc.text(ls, M, y);
+        y += ls.length * 3.4;
+      });
+    }
+    rodape(doc, modelo);
+  }
+
+  /*
+   * Acrescenta ao `doc` as páginas de UMA ficha: as duas do papel e, com
+   * levantamento, o anexo (a ortofoto, os lados e os pontos).
+   * o: {modelo, ficha, lev (montarLevantamento) | null, croqui (desenho em
+   * LARGURA x alturaCroqui) | null, mapa (canvas) | null, formatar, versao,
+   * novaPagina (true: começa numa página nova)}
+   */
+  function fichaNoPdf(doc, o) {
+    var modelo = o.modelo, dados = o.ficha.dados || {}, fm = o.formatar;
+    if (o.novaPagina) doc.addPage();
+    var primeira = doc.getNumberOfPages();
+    var assinaturaDireita = 'Caroá Maps v' + o.versao + ' · ' + quando(new Date().toISOString());
+    // página 1
+    var y = cabecalho(doc, modelo);
+    modelo.secoes.filter(function (s) { return s.pagina === 1; }).forEach(function (s) { y = secaoNoPdf(doc, y, s, dados, {}); });
+    rodape(doc, modelo, assinaturaDireita);
+    // página 2
+    doc.addPage();
+    y = cabecalho(doc, modelo);
+    modelo.secoes.filter(function (s) { return s.pagina === 2 && !s.escritorio; }).forEach(function (s) {
+      y = secaoNoPdf(doc, y, s, dados, { croqui: o.croqui, alturaCroqui: o.alturaCroqui || 130, alturaObs: 22 });
+    });
+    assinaturas(doc, y, dados);
+    rodape(doc, modelo, assinaturaDireita);
+    if (o.lev && (o.lev.lote || (o.lev.edificacoes || []).length)) {
+      doc.addPage();
+      anexo(doc, modelo, o.ficha, o.lev, o.mapa, fm);
+    }
+    // "Página X de N" na barra de cada página desta ficha
+    var ultima = doc.getNumberOfPages(), total = ultima - primeira + 1;
+    for (var p = primeira; p <= ultima; p++) {
+      doc.setPage(p);
+      fonte(doc, 'normal', 8, [255, 255, 255]);
+      doc.text('Página ' + (p - primeira + 1) + ' de ' + total, DIREITA - 3, 27.2, { align: 'right' });
+    }
+    doc.setPage(ultima);
+  }
+
+  window.FichaPDF = {
+    LARGURA_CROQUI: LARGURA, croquiNoCanvas: croquiNoCanvas, croquiNoPdf: croquiNoPdf, fichaNoPdf: fichaNoPdf, pdfTexto: pdfTexto,
+  };
+})();
+
+</script>
+<script>
+/*
+ * Caroá Maps — a FICHA DE CAMPO na tela (1.2): o painel da ficha do lote
+ * (montado do modelo), o CSV dos pontos, o croqui, o levantamento no mapa e o
+ * PDF. Tudo fica no celular (IndexedDB 'fichas'), num registro por lote, já no
+ * formato de subir para um servidor depois: {id, chave, ..., dados, auto,
+ * levantamento, criado_em, atualizado_em}.
+ * O app.js chama FichaUI.iniciar(contexto) com o que a ficha usa dele.
+ */
+(function () {
+  'use strict';
+  var F = window.FichaModelo, LV = window.Levantamento, FP = window.FichaPDF;
+  var MODELO = F.PALMEIRA;
+  var LARGURA_CROQUI = FP.LARGURA_CROQUI, ALTURA_CROQUI = 130;
+  var C = null;                  // o contexto do app.js
+  var fichas = new Map();        // chave do lote -> ficha
+  var aberta = null;             // {ficha, item, gravada, lev}
+  var camada = null;             // os levantamentos no mapa
+  var tempoGravar = null;
+
+  function $(id) { return document.getElementById(id); }
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function novoId() {
+    if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+      var r = Math.random() * 16 | 0;
+      return (c === 'x' ? r : (r & 3 | 8)).toString(16);
+    });
+  }
+
+  // ================================================================ dados
+  function fichaDe(item) { return item ? fichas.get(item.chave) || null : null; }
+
+  function montarLev(ficha, item) {
+    var l = ficha && ficha.levantamento;
+    if (!l || !l.leitura) return null;
+    var perto = item ? { lat: item.lat, lon: item.lon } : (l.perto || null);
+    var lev = LV.montarLevantamento(l.leitura, { zona: l.zona, perto: perto });
+    if (!l.zona) l.zona = lev.zona;
+    return lev;
+  }
+
+  function novaFicha(item) {
+    return Promise.all([C.lerPref('proxima_ficha'), C.lerPref('auxiliar')]).then(function (r) {
+      var numero = r[0] || 1;
+      var agora = new Date();
+      return {
+        id: novoId(), modelo: MODELO.id, chave: item.chave, conjunto: C.E.atual ? C.E.atual.id : null,
+        titulo_conjunto: C.E.atual ? C.E.atual.titulo : '', n: item.n, numero: item.numero || '', origem: item.origem || '',
+        lat_lote: item.lat, lon_lote: item.lon, criado_em: agora.toISOString(), atualizado_em: agora.toISOString(),
+        por: C.E.nome || '', numero_reservado: numero,
+        dados: F.dadosIniciais(item, { numeroFicha: numero, tecnico: C.E.nome, auxiliar: r[1] || '', agora: agora }),
+        auto: {}, levantamento: null,
+      };
+    });
+  }
+
+  /* grava (a primeira gravação usa o número da ficha: o próximo sobe) */
+  function gravarJa(ficha) {
+    ficha.atualizado_em = new Date().toISOString();
+    var primeira = !fichas.has(ficha.chave);
+    fichas.set(ficha.chave, ficha);
+    var p = C.gravar('fichas', ficha);
+    if (primeira && ficha.numero_reservado && ficha.dados.numero_ficha === String(ficha.numero_reservado)) {
+      p = p.then(function () { return C.gravarPref('proxima_ficha', ficha.numero_reservado + 1); });
+    }
+    return p.then(function () {
+      if (aberta && aberta.ficha === ficha) aberta.gravada = true;
+      if (C.E.selecionado && C.E.selecionado.chave === ficha.chave) atualizarBotaoDoCartao(C.E.selecionado);
+    }).catch(function (e) { C.aviso('Não gravei a ficha: ' + e.message, 6000); });
+  }
+  function gravarDepois(ficha) {
+    clearTimeout(tempoGravar);
+    tempoGravar = setTimeout(function () { gravarJa(ficha); }, 400);
+  }
+
+  // ================================================================ o cartão do lote
+  function resumo(item) {
+    var f = fichaDe(item);
+    if (!f) return '📝 Ficha de campo';
+    var a = F.andamento(MODELO, f.dados, !!(f.levantamento && f.levantamento.leitura));
+    return '📝 Ficha nº ' + (f.dados.numero_ficha || '–') + ' · ' + a.feitas + ' de ' + a.total + ' partes' +
+      (f.levantamento ? ' · 📐 levantado' : '');
+  }
+  function atualizarBotaoDoCartao(item) {
+    var bt = $('c-ficha');
+    if (!bt) return;
+    bt.textContent = resumo(item);
+    bt.classList.toggle('tem', !!fichaDe(item));
+  }
+
+  // ================================================================ o painel
+  function campoHtml(c) {
+    var base = 'data-id="' + c.id + '"';
+    var largo = c.largura >= 0.3 || c.tipo === 'longo';
+    var entrada = c.tipo === 'longo'
+      ? '<textarea ' + base + ' rows="4"></textarea>'
+      : '<input ' + base + ' type="text"' + (c.tipo === 'numero' ? ' inputmode="decimal"' : '') +
+        (c.id === 'data' ? ' placeholder="dd/mm/aaaa"' : c.id === 'hora' ? ' placeholder="hh:mm"' : '') + '>';
+    return '<label class="f-campo' + (largo ? ' largo' : '') + (c.calculado ? ' calc' : '') + '"><span>' + esc(c.rotulo) +
+      (c.calculado ? ' <i>(soma)</i>' : '') + '</span>' + entrada + '</label>';
+  }
+
+  function opcoesHtml(o, grade) {
+    var h = '<div class="f-opcoes' + (grade ? ' grade' : '') + '" data-id="' + o.id + '" data-escolha="' + o.escolha + '">';
+    if (o.rotulo) h += '<span class="f-rot">' + esc(o.rotulo) + (o.escolha === 'varias' ? ' <i>(uma ou mais)</i>' : '') + '</span>';
+    h += '<div class="chips">' + o.valores.map(function (v) {
+      return '<button type="button" class="chip" data-v="' + esc(v) + '">' + esc(v) + '</button>';
+    }).join('') + '</div>';
+    if (o.outro) h += '<input class="f-outro" data-id="' + o.id + '_outro" type="text" placeholder="' + esc(o.outro) + ': …">';
+    return h + '</div>';
+  }
+
+  function montarPainel() {
+    var html = '';
+    MODELO.secoes.forEach(function (s) {
+      html += '<details class="f-secao' + (s.escritorio ? ' escritorio' : '') + '" data-secao="' + s.id + '"' +
+        (s.id === 'motivo' ? ' open' : '') + '><summary><span class="f-tit">' + esc(s.titulo || 'VISITA') + '</span>' +
+        '<span class="f-cont" data-cont="' + s.id + '"></span></summary><div class="f-corpo-secao">';
+      if (s.nota) html += '<p class="f-nota">' + esc(s.nota) + '</p>';
+      if (s.escritorio) html += '<p class="f-nota">Preenchido na conferência do escritório.</p>';
+      s.linhas.forEach(function (l) {
+        if (l.campos) {
+          html += '<div class="f-linha">' + l.campos.map(campoHtml).join('') + '</div>';
+          if (l.campos.some(function (c) { return c.id === 'coord_e'; })) {
+            html += '<button type="button" class="bt f-gps" id="f-gps">📍 Usar meu GPS (de pé na testada)</button>';
+          }
+        } else if (l.opcoes) html += opcoesHtml(l.opcoes, false);
+        else if (l.grade) html += opcoesHtml(l.grade, true);
+        else if (l.nota) html += '<p class="f-nota">' + esc(l.nota) + '</p>';
+        else if (l.croqui) html += levantamentoHtml();
+      });
+      html += '</div></details>';
+    });
+    $('f-corpo').innerHTML = html;
+  }
+
+  function levantamentoHtml() {
+    return '<div id="f-lev">' +
+      '<div class="f-lev-acoes"><button type="button" class="bt" id="f-csv-bt">📥 Importar CSV dos pontos</button>' +
+      '<button type="button" class="bt" id="f-lev-mapa">🗺 Ver no mapa</button></div>' +
+      '<p class="f-dica" id="f-lev-dica">CSV do GNSS ou da estação: Number,Y,X,Z,CODE (ou parecido), em SIRGAS 2000 / UTM. ' +
+      'Códigos LOTE, MURO, CERCA ou DIV fazem o lote; EDIF ou CASA, a edificação.</p>' +
+      '<p class="f-lev-info" id="f-lev-info"></p><div class="f-avisos" id="f-lev-avisos"></div>' +
+      '<label class="f-campo largo" id="f-frente-rot"><span>Lado da frente (rua)</span><select id="f-frente"></select></label>' +
+      '<div id="f-confrontantes"></div>' +
+      '<div class="f-croqui-caixa"><canvas id="f-croqui"></canvas></div>' +
+      '<button type="button" class="bt-link" id="f-lev-tirar">Tirar o levantamento desta ficha</button>' +
+      '<input type="file" id="f-csv" hidden accept=".csv,.txt,text/csv,text/plain,text/comma-separated-values">' +
+      '</div>';
+  }
+
+  function preencherCampos() {
+    var d = aberta.ficha.dados;
+    Array.prototype.forEach.call($('f-corpo').querySelectorAll('input[data-id], textarea[data-id]'), function (el) {
+      if (document.activeElement !== el) el.value = d[el.getAttribute('data-id')] || '';
+      el.classList.toggle('auto', !!aberta.ficha.auto[el.getAttribute('data-id')]);
+    });
+    Array.prototype.forEach.call($('f-corpo').querySelectorAll('.f-opcoes'), function (g) {
+      var id = g.getAttribute('data-id'), v = d[id];
+      Array.prototype.forEach.call(g.querySelectorAll('.chip'), function (ch) {
+        var val = ch.getAttribute('data-v');
+        ch.classList.toggle('ativo', Array.isArray(v) ? v.indexOf(val) >= 0 : v === val);
+      });
+    });
+    atualizarAndamento();
+  }
+
+  function atualizarAndamento() {
+    var f = aberta.ficha;
+    var a = F.andamento(MODELO, f.dados, !!(f.levantamento && f.levantamento.leitura));
+    a.secoes.forEach(function (s) {
+      var el = $('f-corpo').querySelector('[data-cont="' + s.id + '"]');
+      if (el) { el.textContent = s.preenchidos ? '✓ ' + s.preenchidos : ''; el.classList.toggle('feito', s.preenchidos > 0); }
+    });
+    $('f-andamento').textContent = a.feitas + '/' + a.total;
+  }
+
+  function abrir(item) {
+    if (!item) return;
+    var existente = fichaDe(item);
+    var pronta = existente ? Promise.resolve(existente) : novaFicha(item);
+    return pronta.then(function (ficha) {
+      aberta = { ficha: ficha, item: item, gravada: !!existente, lev: montarLev(ficha, item) };
+      montarPainel();
+      $('f-titulo').textContent = 'Ficha · ' + (item.numero ? 'Lote ' + C.N.numeroParaMostrar(item.numero) : (item.nome || 'lote ' + item.n));
+      if (C.IOS) $('f-csv').removeAttribute('accept');
+      preencherCampos();
+      desenharLevantamentoNoPainel();
+      C.abrirPainel('p-ficha');
+      $('f-corpo').scrollTop = 0;
+    });
+  }
+
+  function mudou(id, valor, manual) {
+    var f = aberta.ficha;
+    if (valor === '' || (Array.isArray(valor) && !valor.length)) delete f.dados[id]; else f.dados[id] = valor;
+    if (manual) delete f.auto[id];
+    if (/^area_(terreo|superiores|anexos)$/.test(id)) {
+      var t = F.areaConstruidaTotal(f.dados);
+      if (t != null && (!f.dados.area_total || f.auto.area_total)) { f.dados.area_total = F.formatar(t); f.auto.area_total = true; }
+      preencherCampos();
+    }
+    if (id === 'auxiliar') C.gravarPref('auxiliar', valor || '');
+    if (/^(logradouro|numero|pavimentos)$/.test(id)) desenharCroqui();
+    atualizarAndamento();
+    gravarDepois(f);
+  }
+
+  function ligarEventos() {
+    var corpo = $('f-corpo');
+    corpo.addEventListener('input', function (ev) {
+      var el = ev.target;
+      if (el.hasAttribute('data-id')) { mudou(el.getAttribute('data-id'), el.value.trim() ? el.value : '', true); el.classList.remove('auto'); }
+      else if (el.hasAttribute('data-lado')) {
+        var lv = aberta.ficha.levantamento;
+        if (!lv) return;
+        lv.confrontantes = lv.confrontantes || {};
+        if (el.value.trim()) lv.confrontantes[el.getAttribute('data-lado')] = el.value.trim();
+        else delete lv.confrontantes[el.getAttribute('data-lado')];
+        desenharCroqui();
+        gravarDepois(aberta.ficha);
+      }
+    });
+    corpo.addEventListener('click', function (ev) {
+      var ch = ev.target.closest('.chip');
+      if (ch) {
+        var g = ch.closest('.f-opcoes'), id = g.getAttribute('data-id'), val = ch.getAttribute('data-v');
+        var atual = aberta.ficha.dados[id];
+        var novo;
+        if (g.getAttribute('data-escolha') === 'varias') {
+          var lista = Array.isArray(atual) ? atual.slice() : [];
+          var k = lista.indexOf(val);
+          if (k >= 0) lista.splice(k, 1); else lista.push(val);
+          novo = lista;
+        } else {
+          novo = atual === val ? '' : val;
+        }
+        mudou(id, novo, true);
+        preencherCampos();
+        return;
+      }
+      var alvo = ev.target.closest('button');
+      if (!alvo) return;
+      if (alvo.id === 'f-gps') usarGps();
+      else if (alvo.id === 'f-csv-bt') { $('f-csv').value = ''; $('f-csv').click(); }
+      else if (alvo.id === 'f-lev-mapa') verNoMapa();
+      else if (alvo.id === 'f-lev-tirar') tirarLevantamento();
+    });
+    corpo.addEventListener('change', function (ev) {
+      if (ev.target.id === 'f-frente') {
+        var lv = aberta.ficha.levantamento;
+        lv.frente = ev.target.value === '' ? null : +ev.target.value;
+        F.preencherDoLevantamento(aberta.ficha.dados, aberta.ficha.auto, aberta.lev, lv.frente);
+        preencherCampos();
+        desenharLevantamentoNoPainel();
+        gravarDepois(aberta.ficha);
+      } else if (ev.target.id === 'f-csv') {
+        var arq = ev.target.files && ev.target.files[0];
+        if (!arq) return;
+        arq.arrayBuffer().then(function (ab) {
+          return importarCsv(aberta.item, new Uint8Array(ab), arq.name || 'pontos.csv');
+        });
+      }
+    });
+    $('f-pdf').onclick = function () {
+      var f = aberta && aberta.ficha;
+      if (!f) return;
+      clearTimeout(tempoGravar);
+      gravarJa(f).then(function () { return enviarPdf([f], F.nomeDoArquivo(f), 'Ficha de campo nº ' + (f.dados.numero_ficha || '') + ' · lote ' + (f.dados.id_vetorizacao || f.numero || '')); });
+    };
+  }
+
+  function usarGps() {
+    var g = C.gpsRecente();
+    if (!g) { C.aviso('Sem GPS ainda: espere o ponto azul aparecer.'); return; }
+    var u = LV.geoParaUtm(g.lat, g.lon);
+    mudou('coord_e', F.formatar(u.e), true);
+    mudou('coord_n', F.formatar(u.n), true);
+    if (!aberta.ficha.dados.ponto_gnss) mudou('ponto_gnss', 'GPS do celular ±' + Math.round(g.precisao) + ' m', true);
+    preencherCampos();
+    C.aviso('Coordenada da testada: E ' + F.formatar(u.e) + ' · N ' + F.formatar(u.n) + ' (UTM ' + u.zona + 'S)');
+  }
+
+  // ================================================================ o levantamento (CSV)
+  function importarCsv(item, bytes, nome) {
+    var leitura;
+    try {
+      leitura = LV.lerPontos(LV.textoDoArquivo(bytes));
+    } catch (e) {
+      return C.dialogo({ titulo: 'Não li os pontos', texto: nome + ':\n' + e.message, botoes: [{ rotulo: 'OK', valor: true, classe: 'bt-ok' }] });
+    }
+    var existente = fichaDe(item);
+    var pronta = (aberta && aberta.item.chave === item.chave) ? Promise.resolve(aberta.ficha) : existente ? Promise.resolve(existente) : novaFicha(item);
+    return pronta.then(function (ficha) {
+      var antes = ficha.levantamento;
+      ficha.levantamento = {
+        arquivo: nome, importado_em: new Date().toISOString(), leitura: leitura, zona: null,
+        frente: antes && antes.leitura && antes.leitura.pontos.length === leitura.pontos.length ? antes.frente : null,
+        confrontantes: antes && antes.leitura && antes.leitura.pontos.length === leitura.pontos.length ? antes.confrontantes || {} : {},
+      };
+      var lev = montarLev(ficha, item);
+      F.preencherDoLevantamento(ficha.dados, ficha.auto, lev, ficha.levantamento.frente);
+      return gravarJa(ficha).then(function () {
+        if (!aberta || aberta.item.chave !== item.chave) return abrir(item);
+        aberta.lev = lev;
+        preencherCampos();
+        desenharLevantamentoNoPainel();
+      }).then(function () {
+        var secao = $('f-corpo').querySelector('[data-secao="croqui"]');
+        if (secao) { secao.open = true; secao.scrollIntoView({ block: 'start' }); }
+        desenharNoMapa();
+        var l = aberta.lev;
+        C.aviso('Pontos lidos: ' + l.pontos.length + (l.lote ? ' · lote com ' + F.formatar(l.lote.area) + ' m²' : '') +
+          (l.edificacoes.length ? ' · ' + l.edificacoes.length + ' edificação(ões)' : ''), 6000);
+      });
+    });
+  }
+
+  function tirarLevantamento() {
+    var f = aberta.ficha;
+    if (!f.levantamento) return;
+    C.dialogo({
+      titulo: 'Tirar o levantamento?', texto: 'Os pontos de ' + (f.levantamento.arquivo || 'CSV') + ' saem desta ficha (o resto da ficha fica).',
+      botoes: [{ rotulo: 'Manter', valor: false }, { rotulo: 'Tirar', valor: true, classe: 'bt-perigo' }],
+    }).then(function (sim) {
+      if (!sim) return;
+      f.levantamento = null;
+      Object.keys(f.auto).forEach(function (k) { if (/^(area_terreno|testada_principal|coord_e|coord_n|area_terreo|area_total)$/.test(k)) delete f.auto[k]; });
+      aberta.lev = null;
+      desenharLevantamentoNoPainel();
+      atualizarAndamento();
+      desenharNoMapa();
+      gravarJa(f);
+    });
+  }
+
+  function opcoesDoCroqui(ficha, largura, altura) {
+    var d = ficha.dados, lv = ficha.levantamento || {};
+    var rua = (d.logradouro || '').trim();
+    if (rua && d.numero) rua += ', ' + d.numero;
+    return {
+      largura: largura, altura: altura, frente: lv.frente, logradouro: rua || (lv.frente != null ? 'Rua (frente)' : ''),
+      confrontantes: lv.confrontantes || {}, pavimentos: d.pavimentos ? { todos: d.pavimentos } : {},
+    };
+  }
+
+  function desenharLevantamentoNoPainel() {
+    var lev = aberta.lev, lv = aberta.ficha.levantamento;
+    var tem = !!(lev && (lev.lote || lev.edificacoes.length));
+    $('f-lev-dica').hidden = tem;
+    $('f-lev-mapa').hidden = !tem;
+    $('f-lev-tirar').hidden = !lv;
+    $('f-frente-rot').hidden = !(lev && lev.lote);
+    $('f-lev-info').textContent = lv ? (lv.arquivo + ' · ' + lev.pontos.length + ' pontos' +
+      (lev.lote ? ' · lote ' + F.formatar(lev.lote.area) + ' m², perímetro ' + F.formatar(lev.lote.perimetro) + ' m' : ' · sem o lote') +
+      (lev.edificacoes.length ? ' · edificação ' + lev.edificacoes.map(function (e) { return F.formatar(e.area) + ' m²'; }).join(' + ') : '') +
+      ' · UTM ' + lev.zona + 'S') : '';
+    $('f-lev-avisos').innerHTML = lev && lev.avisos.length ? lev.avisos.map(function (a) { return '<p>⚠️ ' + esc(a) + '</p>'; }).join('') : '';
+    var sel = $('f-frente'), conf = $('f-confrontantes');
+    if (lev && lev.lote) {
+      sel.innerHTML = '<option value="">— toque e escolha o lado da rua —</option>' + lev.lote.lados.map(function (l, i) {
+        return '<option value="' + i + '"' + (lv.frente === i ? ' selected' : '') + '>Lado ' + (i + 1) + ': ponto ' + esc(l.de) + ' → ' + esc(l.para) +
+          ' · ' + F.formatar(l.d) + ' m</option>';
+      }).join('');
+      sel.classList.toggle('falta', lv.frente == null);
+      conf.innerHTML = lev.lote.lados.map(function (l, i) {
+        if (lv.frente === i) return '';
+        return '<label class="f-campo"><span>Confrontante do lado ' + (i + 1) + ' (' + esc(l.de) + ' → ' + esc(l.para) + ', ' + F.formatar(l.d) +
+          ' m)</span><input type="text" data-lado="' + i + '" placeholder="ex.: Lote 12, Rua B, Área verde" value="' +
+          esc((lv.confrontantes || {})[i] || '') + '"></label>';
+      }).join('');
+    } else {
+      sel.innerHTML = '';
+      conf.innerHTML = '';
+    }
+    desenharCroqui();
+  }
+
+  function desenharCroqui() {
+    var tela = $('f-croqui');
+    if (!tela || !aberta) return;
+    var caixa = tela.parentNode, largura = Math.max(260, caixa.clientWidth || 320);
+    var dpr = window.devicePixelRatio || 1;
+    var px = largura / LARGURA_CROQUI;
+    tela.style.width = largura + 'px';
+    tela.style.height = Math.round(ALTURA_CROQUI * px) + 'px';
+    tela.width = Math.round(largura * dpr);
+    tela.height = Math.round(ALTURA_CROQUI * px * dpr);
+    var ctx = tela.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    var d = LV.croqui(aberta.lev, opcoesDoCroqui(aberta.ficha, LARGURA_CROQUI, ALTURA_CROQUI));
+    FP.croquiNoCanvas(ctx, d, px, true);
+  }
+
+  function verNoMapa() {
+    var lev = aberta.lev;
+    if (!lev) return;
+    var pts = lev.lote ? lev.lote.vertices.slice() : [];
+    lev.edificacoes.forEach(function (e) { pts = pts.concat(e.vertices); });
+    C.fecharPaineis();
+    C.fecharCartao();
+    desenharNoMapa();
+    C.mapa.fitBounds(pts.map(function (v) { return [v.lat, v.lon]; }), { padding: [50, 50], maxZoom: 20 });
+  }
+
+  // ================================================================ no mapa
+  function desenharNoMapa() {
+    if (!camada) camada = L.layerGroup().addTo(C.mapa);
+    camada.clearLayers();
+    if (!C.E.atual) return;
+    var itens = new Map(C.E.atual.itens.map(function (i) { return [i.chave, i]; }));
+    fichas.forEach(function (f, chave) {
+      var item = itens.get(chave);
+      if (!item || !f.levantamento) return;
+      var lev = montarLev(f, item);
+      if (!lev) return;
+      var aoTocar = function () { C.selecionar(item, false); };
+      lev.edificacoes.forEach(function (ed) {
+        camada.addLayer(L.polygon(ed.vertices.map(function (v) { return [v.lat, v.lon]; }),
+          { renderer: C.desenhista, color: '#ff6d00', weight: 2, fillColor: '#ff6d00', fillOpacity: 0.28 }).on('click', aoTocar));
+      });
+      if (lev.lote) {
+        camada.addLayer(L.polygon(lev.lote.vertices.map(function (v) { return [v.lat, v.lon]; }),
+          { renderer: C.desenhista, color: '#e000e0', weight: 3, dashArray: '7 5', fillColor: '#e000e0', fillOpacity: 0.06 }).on('click', aoTocar));
+      }
+      lev.pontos.forEach(function (p) {
+        camada.addLayer(L.circleMarker([p.lat, p.lon], { renderer: C.desenhista, radius: 3.5, color: '#e000e0', weight: 1.5, fillColor: '#fff', fillOpacity: 1, interactive: false }));
+      });
+    });
+  }
+
+  // ================================================================ o PDF
+  function poligonosParaMapa(lev) {
+    return {
+      lote: lev.lote ? lev.lote.vertices.map(function (v) { return [v.lat, v.lon]; }) : null,
+      edificacoes: lev.edificacoes.map(function (e) { return e.vertices.map(function (v) { return [v.lat, v.lon]; }); }),
+      pontos: lev.pontos.map(function (p) { return { lat: p.lat, lon: p.lon, nome: p.nome }; }),
+    };
+  }
+
+  function itemDa(ficha) {
+    var achado = null;
+    C.E.conjuntos.forEach(function (c) {
+      if (achado) return;
+      achado = c.itens.find(function (i) { return i.chave === ficha.chave; }) || null;
+      if (achado) achado = { item: achado, conjunto: c };
+    });
+    return achado;
+  }
+
+  function pdfDasFichas(lista) {
+    var jsPDF = window.jspdf.jsPDF;
+    var doc = new jsPDF({ unit: 'mm', format: 'a4', compress: true });
+    var tarefa = Promise.resolve();
+    lista.forEach(function (ficha, k) {
+      tarefa = tarefa.then(function () {
+        C.mostrarProgresso('Montando a ficha ' + (k + 1) + ' de ' + lista.length + '…', k, lista.length);
+        var achado = itemDa(ficha);
+        var item = achado ? achado.item : { lat: ficha.lat_lote, lon: ficha.lon_lote, chave: ficha.chave, aneis: [] };
+        var lev = montarLev(ficha, item);
+        var croqui = lev ? LV.croqui(lev, opcoesDoCroqui(ficha, LARGURA_CROQUI, ALTURA_CROQUI)) : null;
+        var mapa = lev && (lev.lote || lev.edificacoes.length)
+          ? C.mapaDoLote(achado ? achado.conjunto : null, item, poligonosParaMapa(lev), 1500, 760) : Promise.resolve(null);
+        return mapa.then(function (tela) {
+          FP.fichaNoPdf(doc, {
+            modelo: MODELO, ficha: ficha, lev: lev, croqui: croqui, mapa: tela, formatar: LV.formatarM,
+            versao: C.versao, novaPagina: k > 0, alturaCroqui: ALTURA_CROQUI,
+          });
+        }).then(C.respirar);
+      });
+    });
+    return tarefa.then(function () { return doc.output('blob'); });
+  }
+
+  function enviarPdf(lista, nome, texto) {
+    C.mostrarProgresso('Montando a ficha…', 0, lista.length);
+    return pdfDasFichas(lista).then(function (blob) {
+      C.esconderProgresso();
+      window.__ultimaFicha = { blob: blob, nome: nome };
+      return C.entregarArquivo(blob, nome, 'application/pdf', texto);
+    }).catch(function (e) {
+      C.esconderProgresso();
+      C.aviso('Não consegui gerar a ficha: ' + e.message, 7000);
+    });
+  }
+
+  function fichasDoDia(dia, marcasDoDia) {
+    var chaves = new Set(marcasDoDia.map(function (m) { return m.chave; }));
+    var lista = [];
+    fichas.forEach(function (f) {
+      if (chaves.has(f.chave) || C.N.dataLocal(f.atualizado_em) === dia) lista.push(f);
+    });
+    return lista.sort(function (a, b) { return (+a.dados.numero_ficha || 0) - (+b.dados.numero_ficha || 0) || String(a.criado_em).localeCompare(String(b.criado_em)); });
+  }
+
+  // ================================================================ o CSV que chegou de fora (WhatsApp, 📂)
+  /* De que lote do mapa são esses pontos? (o que contém o centro deles, ou o mais perto até 40 m) */
+  function loteDosPontos(bytes) {
+    var leitura = LV.lerPontos(LV.textoDoArquivo(bytes));
+    if (!C.E.atual) return { leitura: leitura, item: null };
+    var lev = LV.montarLevantamento(leitura, { perto: { lat: C.E.atual.itens.length ? C.E.atual.itens[0].lat : 0, lon: C.E.atual.itens.length ? C.E.atual.itens[0].lon : -51 } });
+    var lat = 0, lon = 0;
+    lev.pontos.forEach(function (p) { lat += p.lat; lon += p.lon; });
+    lat /= lev.pontos.length; lon /= lev.pontos.length;
+    var dentro = C.E.atual.itens.find(function (i) { return C.N.pontoNoLote(lat, lon, i); });
+    if (dentro) return { leitura: leitura, item: dentro };
+    var melhor = null, dMelhor = 40;
+    C.E.atual.itens.forEach(function (i) {
+      var d = C.N.distanciaM(lat, lon, i.lat, i.lon);
+      if (d < dMelhor) { dMelhor = d; melhor = i; }
+    });
+    return { leitura: leitura, item: melhor };
+  }
+
+  function voltar() {
+    if ($('p-ficha').hidden) return false;
+    C.fecharPaineis();
+    return true;
+  }
+
+  // ================================================================ início
+  function iniciar(contexto) {
+    C = contexto;
+    ligarEventos();
+    $('p-ficha').querySelector('.voltar').onclick = function () {
+      clearTimeout(tempoGravar);
+      if (aberta && (aberta.gravada || fichas.has(aberta.ficha.chave))) gravarJa(aberta.ficha);
+      C.fecharPaineis();
+      if (aberta && C.E.selecionado && C.E.selecionado.chave === aberta.ficha.chave) atualizarBotaoDoCartao(C.E.selecionado);
+    };
+    window.addEventListener('resize', function () { if (aberta && !$('p-ficha').hidden) desenharCroqui(); });
+    return C.lerTudo('fichas').then(function (lista) {
+      (lista || []).forEach(function (f) { fichas.set(f.chave, f); });
+    });
+  }
+
+  window.FichaUI = {
+    iniciar: iniciar, abrir: abrir, fichaDe: fichaDe, resumo: resumo, atualizarBotaoDoCartao: atualizarBotaoDoCartao,
+    importarCsv: importarCsv, loteDosPontos: loteDosPontos, desenharNoMapa: desenharNoMapa, fichasDoDia: fichasDoDia,
+    enviarPdf: enviarPdf, pdfDasFichas: pdfDasFichas, voltar: voltar, todas: function () { return Array.from(fichas.values()); },
+  };
+})();
+
+</script>
+<script>
+/*
  * Caroá Maps — a tela de campo. Usa o Nucleo (nucleo.js), o Leaflet e o jsPDF.
  * Dentro do APK há a ponte window.CaroaMapsAndroid; no navegador (e no
  * iPhone, pela tela de início, 1.1) o mesmo HTML funciona sem ela: o
@@ -1819,7 +3834,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
  */
 (function () {
   'use strict';
-  var VERSAO_APP = '1.1';
+  var VERSAO_APP = '1.2';
   var N = window.Nucleo;
   var ANDROID = window.CaroaMapsAndroid || null;
   // iPadOS se diz "Macintosh", mas tem toque
@@ -1934,13 +3949,15 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
   }
   function abrirBanco() {
     return new Promise(function (ok, erro) {
-      var req = indexedDB.open('caroa_maps', 1);
+      // 2 (1.2): + 'fichas', a ficha de campo de cada lote (chave = a do lote)
+      var req = indexedDB.open('caroa_maps', 2);
       req.onupgradeneeded = function () {
         var db = req.result;
         if (!db.objectStoreNames.contains('conjuntos')) db.createObjectStore('conjuntos', { keyPath: 'id' });
         if (!db.objectStoreNames.contains('blocos')) db.createObjectStore('blocos');
         if (!db.objectStoreNames.contains('marcas')) db.createObjectStore('marcas', { keyPath: 'chave' });
         if (!db.objectStoreNames.contains('prefs')) db.createObjectStore('prefs', { keyPath: 'k' });
+        if (!db.objectStoreNames.contains('fichas')) db.createObjectStore('fichas', { keyPath: 'chave' });
       };
       req.onsuccess = function () { BANCO = req.result; ok(BANCO); };
       req.onerror = function () { erro(req.error); };
@@ -2183,6 +4200,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
       orto.redraw();
       desenharLotes();
       atualizarContador();
+      if (window.FichaUI) FichaUI.desenharNoMapa();
       if (enquadrar !== false) verTudo();
       gravarPref('ultimo', id);
     });
@@ -2284,16 +4302,51 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     return Promise.reject(new Error('não reconheci o arquivo (esperava o CAROA_MAPS_….zip ou um KML).'));
   }
 
+  /* O CSV (ou TXT) dos pontos de um levantamento (1.2)? */
+  function pareceCsv(nome, bytes) {
+    if (/\.(csv|txt)$/i.test(nome)) return true;
+    if (bytes.length > 4 && bytes[0] === 0x50 && bytes[1] === 0x4b) return false;
+    var inicio = bytesParaTexto(bytes.subarray(0, 2048));
+    if (/<kml[\s>]|^%PDF|<\?xml/i.test(inicio)) return false;
+    try { return window.Levantamento.lerPontos(inicio.split(/\r?\n/).slice(0, -1).join('\n')).pontos.length >= 3; } catch (e) { return false; }
+  }
+
+  /* O CSV que chegou pelo 📂 ou pelo WhatsApp: vai para a ficha do lote aberto
+     ou do lote onde os pontos caem, depois de perguntar. */
+  function receberCsv(nome, bytes) {
+    var achado;
+    try { achado = FichaUI.loteDosPontos(bytes); } catch (e) {
+      return dialogo({ titulo: 'Não li os pontos', texto: nome + ':\n' + e.message, botoes: [{ rotulo: 'OK', valor: true, classe: 'bt-ok' }] });
+    }
+    var alvo = E.selecionado || achado.item;
+    if (!alvo) {
+      return dialogo({
+        titulo: 'De que lote são esses pontos?', botoes: [{ rotulo: 'OK', valor: true, classe: 'bt-ok' }],
+        texto: nome + ': não achei o lote no mapa aberto.\n\nAbra o lote no mapa, toque em 📝 Ficha de campo e importe o CSV por lá.',
+      });
+    }
+    var outro = E.selecionado && achado.item && achado.item.chave !== E.selecionado.chave;
+    return dialogo({
+      titulo: 'Pontos do levantamento',
+      texto: 'Anexar os ' + achado.leitura.pontos.length + ' pontos de ' + nome + ' à ficha do lote ' + mostrarNumero(alvo) + '?' +
+        (outro ? '\n\nAtenção: os pontos caem no lote ' + mostrarNumero(achado.item) + '.' : ''),
+      botoes: [{ rotulo: 'Cancelar', valor: false }, { rotulo: 'Anexar', valor: true, classe: 'bt-ok' }],
+    }).then(function (sim) { if (sim) return FichaUI.importarCsv(alvo, bytes, nome); });
+  }
+
   function importarArquivos(lista) {
     var arquivos = Array.prototype.slice.call(lista || []);
     if (!arquivos.length) return Promise.resolve([]);
-    var abertos = [], erros = [];
+    var abertos = [], erros = [], csvs = [];
     mostrarProgresso('Abrindo ' + (arquivos.length > 1 ? arquivos.length + ' arquivos' : arquivos[0].name) + '…', 0, 1);
     return arquivos.reduce(function (p, arq) {
       return p.then(function () {
         return arq.arrayBuffer().then(function (ab) {
-          return importarBytes(arq.name || 'arquivo', new Uint8Array(ab));
+          var bytes = new Uint8Array(ab), nome = arq.name || 'arquivo';
+          if (pareceCsv(nome, bytes)) { csvs.push({ nome: nome, bytes: bytes }); return null; }
+          return importarBytes(nome, bytes);
         }).then(function (c) {
+          if (!c) return;
           E.conjuntos = E.conjuntos.filter(function (x) { return x.id !== c.id; }).concat([c]);
           abertos.push(c);
         }).catch(function (e) {
@@ -2317,6 +4370,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
       if (erros.length) {
         return dialogo({ titulo: 'Não consegui abrir', texto: erros.join('\n\n'), botoes: [{ rotulo: 'OK', valor: true, classe: 'bt-ok' }] });
       }
+    }).then(function () {
+      return csvs.reduce(function (p, x) { return p.then(function () { return receberCsv(x.nome, x.bytes); }); }, Promise.resolve());
     }).then(function () { return abertos; });
   }
 
@@ -2479,6 +4534,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
         (marca.dentro ? ' (dentro do lote)' : marca.distancia_m != null ? ' (a ' + marca.distancia_m + ' m do centro)' : ' (sem GPS)');
       if (document.activeElement !== $('c-obs')) $('c-obs').value = marca.obs || '';
     }
+    if (window.FichaUI) FichaUI.atualizarBotaoDoCartao(item);
     $('cartao').hidden = false;
     atualizarDistancia();
   }
@@ -2584,6 +4640,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     if (item && !N.conferido(E.marcas, item)) conferir(item);
   };
   $('c-desfazer').onclick = function () { if (E.selecionado) desfazer(E.selecionado); };
+  $('c-ficha').onclick = function () { if (E.selecionado) FichaUI.abrir(E.selecionado); };
 
   function irAoProximo() {
     if (!E.atual) { aviso('Abra um mapa primeiro.'); return; }
@@ -2600,7 +4657,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     $(id).hidden = false;
   }
   function fecharPaineis() {
-    ['p-lista', 'p-mapas', 'p-relatorio'].forEach(function (id) { $(id).hidden = true; });
+    ['p-lista', 'p-mapas', 'p-relatorio', 'p-ficha'].forEach(function (id) { $(id).hidden = true; });
   }
   Array.prototype.forEach.call(document.querySelectorAll('.painel .voltar'), function (b) { b.onclick = fecharPaineis; });
 
@@ -2631,10 +4688,10 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
       return;
     }
     ol.innerHTML = lista.slice(0, 2000).map(function (x) {
-      var i = x.item, m = E.marcas.get(i.chave);
+      var i = x.item, m = E.marcas.get(i.chave), f = window.FichaUI && FichaUI.fichaDe(i);
       return '<li data-k="' + esc(i.chave) + '"><span class="num-p' + (m ? ' ok' : '') + '">' + n2(i.n) + '</span>' +
         '<span class="meio"><span class="t1">' + esc(i.numero ? 'Lote ' + N.numeroParaMostrar(i.numero) : (i.nome || 'sem número')) + '</span>' +
-        '<span class="t2">' + esc(i.origem || '') + '</span></span>' +
+        '<span class="t2">' + esc((i.origem || '') + (f ? ' · 📝 ficha nº ' + (f.dados.numero_ficha || '–') + (f.levantamento ? ' · 📐' : '') : '')) + '</span></span>' +
         '<span class="dir">' + (m ? '✓ ' + N.horaLocal(m.em) + '<br>' : '') + esc(x.d != null ? N.formatarDistancia(x.d) : '') + '</span></li>';
     }).join('');
   }
@@ -2745,7 +4802,17 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
         esc((m.origem || '') + (m.obs ? ' · ' + m.obs : '')) + '</span></span><span class="dir">' + N.horaLocal(m.em) + '<br>' + esc(textoGps(m)) + '</span></li>';
     }).join('') : '<li class="vazia">Nenhum lote conferido em ' + dataBR(dia) + ' (' + diaDaSemana(dia) + ').</li>';
     $('r-pdf').disabled = !d.marcas.length;
+    var fichasDoDia = window.FichaUI ? FichaUI.fichasDoDia(dia, d.marcas) : [];
+    $('r-fichas').textContent = '📋 Fichas do dia em PDF (' + fichasDoDia.length + ')';
+    $('r-fichas').disabled = !fichasDoDia.length;
   }
+  $('r-fichas').onclick = function () {
+    var dia = diaDoRelatorio;
+    var lista = FichaUI.fichasDoDia(dia, N.marcasDoDia(E.marcas, dia));
+    if (!lista.length) { aviso('Nenhuma ficha nesse dia.'); return; }
+    var nome = 'FICHAS_' + dia + '_' + (E.nome || 'CAMPO').normalize('NFD').replace(/[^\w]+/g, '_').replace(/_+$/, '').toUpperCase() + '.pdf';
+    FichaUI.enviarPdf(lista, nome, lista.length + ' ficha(s) de campo de ' + dataBR(dia) + (E.nome ? ' (' + E.nome + ')' : '') + '.');
+  };
   $('bt-relatorio').onclick = function () { diaDoRelatorio = hoje(); desenharRelatorio(); abrirPainel('p-relatorio'); };
   $('r-antes').onclick = function () { diaDoRelatorio = somarDias(diaDoRelatorio, -1); desenharRelatorio(); };
   $('r-depois').onclick = function () { diaDoRelatorio = somarDias(diaDoRelatorio, 1); desenharRelatorio(); };
@@ -2759,6 +4826,95 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
   function pixel(lat, lon, z) {
     var n = 256 * Math.pow(2, z), lr = lat * Math.PI / 180;
     return [(lon + 180) / 360 * n, (1 - Math.log(Math.tan(lr) + 1 / Math.cos(lr)) / Math.PI) / 2 * n];
+  }
+
+  /* O lote sobre a ortofoto (1.2, para o anexo da ficha): os lotes da
+     vetorização em amarelo, o levantado em magenta, a edificação em laranja.
+     pols: {lote: [[lat, lon]] | null, edificacoes: [[[lat, lon]]], pontos: [{lat, lon, nome}]} */
+  function mapaDoLote(conjunto, item, pols, largura, altura) {
+    var pts = [];
+    (item.aneis || []).forEach(function (a) { a.forEach(function (p) { pts.push([p[1], p[0]]); }); });
+    if (pols.lote) pts = pts.concat(pols.lote);
+    pols.edificacoes.forEach(function (e) { pts = pts.concat(e); });
+    if (!pts.length) pts.push([item.lat, item.lon]);
+    var lats = pts.map(function (p) { return p[0]; }), lons = pts.map(function (p) { return p[1]; });
+    var s = Math.min.apply(null, lats), n = Math.max.apply(null, lats), o = Math.min.apply(null, lons), l = Math.max.apply(null, lons);
+    var z = 21;
+    for (; z > 12; z--) {
+      var a = pixel(n, o, z), b = pixel(s, l, z);
+      if (b[0] - a[0] < largura * 0.55 && b[1] - a[1] < altura * 0.55) break;
+    }
+    var c0 = pixel((s + n) / 2, (o + l) / 2, z);
+    var x0 = c0[0] - largura / 2, y0 = c0[1] - altura / 2;
+    var tela = document.createElement('canvas');
+    tela.width = largura;
+    tela.height = altura;
+    var ctx = tela.getContext('2d');
+    ctx.fillStyle = '#dfe3e6';
+    ctx.fillRect(0, 0, largura, altura);
+    var tarefa = Promise.resolve();
+    if (conjunto && conjunto.quantosBlocos) {
+      tarefa = chavesDoConjunto(conjunto.id).then(function (r) {
+        var lista = [];
+        for (var tx = Math.floor(x0 / 256); tx <= Math.floor((x0 + largura) / 256); tx++) {
+          for (var ty = Math.floor(y0 / 256); ty <= Math.floor((y0 + altura) / 256); ty++) {
+            lista.push(desenharBloco(ctx, conjunto.id, r.chaves, r.zMin, r.zMax, z, tx, ty, tx * 256 - x0, ty * 256 - y0, 256));
+          }
+        }
+        return Promise.all(lista);
+      });
+    }
+    function xy(lat, lon) { var q = pixel(lat, lon, z); return [q[0] - x0, q[1] - y0]; }
+    function anel(lista) {
+      ctx.beginPath();
+      lista.forEach(function (p, k) { var q = xy(p[0], p[1]); if (k) ctx.lineTo(q[0], q[1]); else ctx.moveTo(q[0], q[1]); });
+      ctx.closePath();
+    }
+    return tarefa.then(function () {
+      (conjunto ? conjunto.itens : [item]).forEach(function (it) {
+        (it.aneis || []).forEach(function (a) {
+          anel(a.map(function (p) { return [p[1], p[0]]; }));
+          ctx.lineWidth = it.chave === item.chave ? 4 : 1.5;
+          ctx.strokeStyle = it.chave === item.chave ? '#ffd600' : 'rgba(255,214,0,.65)';
+          ctx.stroke();
+        });
+      });
+      pols.edificacoes.forEach(function (e) {
+        anel(e);
+        ctx.fillStyle = 'rgba(255,109,0,.32)';
+        ctx.fill();
+        ctx.lineWidth = 2.5;
+        ctx.strokeStyle = '#ff6d00';
+        ctx.stroke();
+      });
+      if (pols.lote) {
+        anel(pols.lote);
+        ctx.setLineDash([12, 7]);
+        ctx.lineWidth = 4;
+        ctx.strokeStyle = '#e000e0';
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+      ctx.font = 'bold 17px sans-serif';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'middle';
+      pols.pontos.forEach(function (p) {
+        var q = xy(p.lat, p.lon);
+        ctx.beginPath();
+        ctx.arc(q[0], q[1], 5, 0, Math.PI * 2);
+        ctx.fillStyle = '#fff';
+        ctx.fill();
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#e000e0';
+        ctx.stroke();
+        ctx.lineWidth = 4;
+        ctx.strokeStyle = 'rgba(0,0,0,.75)';
+        ctx.strokeText(p.nome, q[0] + 8, q[1] - 8);
+        ctx.fillStyle = '#fff';
+        ctx.fillText(p.nome, q[0] + 8, q[1] - 8);
+      });
+      return tela;
+    });
   }
 
   function desenharMapaDoDia(grupo, largura, altura) {
@@ -3037,6 +5193,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
 
   window.voltarAndroid = function () {
     if (dialogoAberto) { dialogoAberto(); return true; }
+    if (!$('p-ficha').hidden) { $('p-ficha').querySelector('.voltar').click(); return true; }
     if (!$('p-lista').hidden || !$('p-mapas').hidden || !$('p-relatorio').hidden) { fecharPaineis(); return true; }
     if (!$('cartao').hidden) { fecharCartao(); return true; }
     return false;
@@ -3067,6 +5224,15 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     try { if (ANDROID && ANDROID.tema) ANDROID.tema(true); } catch (e) { /* ok */ }
     if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(function () { /* ok */ });
     return abrirBanco().then(function () {
+      // a ficha de campo (ficha.js) usa daqui o banco, os diálogos, o mapa e o PDF
+      return FichaUI.iniciar({
+        E: E, N: N, mapa: mapa, desenhista: desenhista, versao: VERSAO_APP, IOS: IOS,
+        gravar: gravar, lerTudo: lerTudo, lerPref: lerPref, gravarPref: gravarPref,
+        aviso: aviso, dialogo: dialogo, mostrarProgresso: mostrarProgresso, esconderProgresso: esconderProgresso,
+        respirar: respirar, entregarArquivo: entregarArquivo, abrirPainel: abrirPainel, fecharPaineis: fecharPaineis,
+        selecionar: selecionar, fecharCartao: fecharCartao, gpsRecente: gpsRecente, mapaDoLote: mapaDoLote,
+      });
+    }).then(function () {
       return Promise.all([lerPref('nome'), lerTudo('conjuntos'), lerTudo('marcas'), lerPref('ultimo')]);
     }).then(function (r) {
       E.nome = r[0] || '';
