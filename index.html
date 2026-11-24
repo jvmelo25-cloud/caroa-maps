@@ -984,6 +984,16 @@ input, textarea { font: inherit; -webkit-user-select: text; user-select: text; }
 .e-detalhe .campo { margin: 10px 0 0; }
 .e-detalhe .marcas { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
 .e-detalhe textarea { width: 100%; margin-top: 4px; border: 2px solid var(--linha); border-radius: 10px; padding: 8px 10px; min-height: 60px; font-size: 15px; }
+/* primeiro acesso e liberação (1.4) */
+.n-novo { display: block; margin: 12px auto 0; }
+.n-cadastro { margin-top: 8px; background: var(--branco); border-radius: 12px; padding: 4px 12px 12px; }
+.e-equipe { background: #fff4d6; border: 1px solid #e3b23c; border-radius: 12px; padding: 10px 12px; margin-bottom: 10px; }
+.e-equipe h3 { margin: 0 0 6px; font-size: 15px; color: #4a3500; }
+.e-equipe .pessoa { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-top: 1px solid rgba(0,0,0,.08); }
+.e-equipe .pessoa:first-of-type { border-top: 0; }
+.e-equipe .pessoa span { flex: 1; min-width: 0; font-size: 14px; }
+.e-equipe .pessoa b { display: block; }
+.e-equipe .pessoa .bt { min-height: 40px; font-size: 14px; }
 
 </style>
 </head>
@@ -1092,6 +1102,15 @@ input, textarea { font: inherit; -webkit-user-select: text; user-select: text; }
       <label class="campo">E-mail<input id="n-email" type="email" autocomplete="username" inputmode="email" autocapitalize="off" spellcheck="false"></label>
       <label class="campo">Senha<input id="n-senha" type="password" autocomplete="current-password"></label>
       <button id="n-entrar" class="bt bt-grande bt-ok" type="button">Entrar</button>
+      <button id="n-novo" class="bt-link n-novo" type="button">Primeiro acesso? Criar minha conta</button>
+      <div id="n-cadastro" class="n-cadastro" hidden>
+        <p class="dica">A conta fica aguardando a coordenação liberar. Enquanto isso o app funciona normalmente e guarda tudo no celular.</p>
+        <label class="campo">Seu nome (vai nos relatórios)<input id="n-nome-novo" type="text" autocomplete="name"></label>
+        <label class="campo">E-mail<input id="n-email-novo" type="email" autocomplete="username" inputmode="email" autocapitalize="off" spellcheck="false"></label>
+        <label class="campo">Senha (pelo menos 6 caracteres)<input id="n-senha-nova" type="password" autocomplete="new-password"></label>
+        <label class="campo">Repita a senha<input id="n-senha-nova2" type="password" autocomplete="new-password"></label>
+        <button id="n-criar" class="bt bt-grande" type="button">Criar minha conta</button>
+      </div>
       <p id="n-erro" class="n-erro" hidden></p>
     </div>
     <div id="n-dentro" hidden>
@@ -1118,6 +1137,7 @@ input, textarea { font: inherit; -webkit-user-select: text; user-select: text; }
     </select>
   </div>
   <div class="p-corpo e-corpo">
+    <div id="e-equipe" class="e-equipe" hidden></div>
     <div id="e-relatorios" class="e-relatorios"></div>
     <ol id="e-itens" class="lista e-lista"></ol>
   </div>
@@ -4008,18 +4028,21 @@ window.LOGO_CAROA = { dados: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD
   var PREF_ENVIADOS = 'sinc_enviados';
 
   /* Que tipo de falha é esta?
-     'sessao'  o login venceu: guarda tudo e pede para entrar de novo
-     'recusa'  o servidor nunca vai aceitar (permissão, dado inválido, arquivo
-               grande ou de tipo errado): sai da fila, vai para os recusados
-     'erro'    o servidor respondeu "não" por outro motivo (ex.: falta coluna):
-               guarda, e segue com as outras tabelas
-     'rede'    sem sinal, servidor fora, limite de pedidos: guarda e para */
+     'sessao'    o login venceu: guarda tudo e pede para entrar de novo
+     'bloqueado' sem permissão (conta ainda não liberada pela coordenação, ou
+                 bloqueada): guarda TUDO e para (1.4: antes saía da fila)
+     'recusa'    o servidor nunca vai aceitar (dado inválido, arquivo grande ou
+                 de tipo errado): sai da fila, vai para os recusados
+     'erro'      o servidor respondeu "não" por outro motivo (ex.: falta
+                 coluna): guarda, e segue com as outras tabelas
+     'rede'      sem sinal, servidor fora, limite de pedidos: guarda e para */
   function classificar(e, arquivo) {
     var st = Number(e && e.status) || 0;
     var cod = String((e && (e.codigo || e.code)) || '');
     var msg = String((e && e.message) || '');
     if (st === 401 || /^PGRST30[1-3]$/.test(cod) || /jwt|token.*expir|not authenticated|invalid claim/i.test(msg)) return 'sessao';
-    if (st === 403 || cod === '42501' || cod === '23514' || cod === '23502' || cod === '22P02') return 'recusa';
+    if (st === 403 || cod === '42501' || /row-level security|permission denied/i.test(msg)) return 'bloqueado';
+    if (cod === '23514' || cod === '23502' || cod === '22P02') return 'recusa';
     if (arquivo && (st === 413 || st === 415 || cod === '413' || cod === '415' || /too large|mime type|invalid mime/i.test(msg))) return 'recusa';
     if (st >= 400 && st < 500 && st !== 408 && st !== 429) return 'erro';
     return 'rede';
@@ -4027,6 +4050,7 @@ window.LOGO_CAROA = { dados: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD
 
   function mensagem(tipo, e) {
     if (tipo === 'sessao') return 'Entre de novo: a sessão venceu. Nada se perdeu, fica tudo guardado.';
+    if (tipo === 'bloqueado') return 'Sem permissão no servidor: a conta ainda não foi liberada pela coordenação (ou foi bloqueada). Fica tudo guardado no celular.';
     if (tipo === 'erro') return 'O servidor recusou (' + ((e && e.message) || 'sem detalhe') + '). Fica guardado; avise a coordenação.';
     return 'Sem sinal (ou o servidor não respondeu): fica tudo guardado e sobe sozinho.';
   }
@@ -4326,6 +4350,9 @@ window.LOGO_CAROA = { dados: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD
   var INTERVALO_MS = 30000;
   var S = window.Sincronia;
   var C = null, cliente = null, motor = null, sessao = null, papel = null, ultimoEstado = null, tempoEnvio = null;
+  // 1.4: conta criada no primeiro acesso fica AGUARDANDO até um analista liberar;
+  // enquanto isso o app trabalha normal e a fila guarda tudo (nada sobe)
+  var aguardando = false, relogioLiberacao = null;
 
   function $(id) { return document.getElementById(id); }
 
@@ -4364,7 +4391,11 @@ window.LOGO_CAROA = { dados: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD
     var bt = $('bt-nuvem');
     if (!bt) return;
     var cls = 'nuvem', txt = '☁', titulo;
-    if (!sessao || e.precisaLogin) {
+    if (sessao && aguardando) {
+      cls += ' pend';
+      txt = '☁ aguardando';
+      titulo = 'Conta aguardando a liberação da coordenação';
+    } else if (!sessao || e.precisaLogin) {
       cls += ' fora';
       txt = '☁ entrar';
       titulo = e.precisaLogin ? 'A sessão venceu: entre de novo' : 'Entrar para enviar';
@@ -4401,8 +4432,17 @@ window.LOGO_CAROA = { dados: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD
     if (!dentro) return;
     var e = ultimoEstado || {};
     $('n-email-txt').textContent = sessao.user.email;
-    $('n-papel').textContent = papel === 'analista' ? 'analista (escritório)' : 'campo';
+    $('n-papel').textContent = papel === 'analista' ? 'analista (escritório)' : aguardando ? 'campo · aguardando liberação' : 'campo';
     var linhas = [];
+    if (aguardando) {
+      linhas.push('⏳ Conta criada: aguardando a coordenação liberar.');
+      linhas.push('Pode trabalhar normalmente: tudo fica guardado no celular' + (e.pendentes ? ' (' + e.pendentes + ' por enviar)' : '') +
+        ' e sobe sozinho quando liberar.');
+      $('n-estado').textContent = linhas.join('\n');
+      $('n-estado').classList.add('erro');
+      $('n-escritorio').hidden = true;
+      return;
+    }
     linhas.push(e.pendentes ? '⏳ ' + e.pendentes + ' por enviar' : '✓ Tudo enviado');
     linhas.push('Última sincronia: ' + hora(e.ultima));
     if (e.erro) linhas.push('⚠️ ' + e.erro);
@@ -4422,7 +4462,39 @@ window.LOGO_CAROA = { dados: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD
     if (/invalid login credentials/i.test(m)) return 'E-mail ou senha errados.';
     if (/email not confirmed/i.test(m)) return 'Este login ainda não foi confirmado. No painel do Supabase (Authentication › Users), confirme o usuário.';
     if (/fetch|network|load failed/i.test(m)) return 'Sem sinal: tente de novo com internet.';
-    return 'Não consegui entrar: ' + m;
+    if (/already registered|already been registered|user already exists/i.test(m)) return 'Já existe uma conta com este e-mail: use "Entrar".';
+    if (/signups? not allowed|signup is disabled/i.test(m)) return 'O cadastro pelo app está desligado no Supabase (Authentication › Sign In / Providers › Allow new users to sign up).';
+    if (/password should be at least|weak password/i.test(m)) return 'A senha precisa ter pelo menos 6 caracteres.';
+    if (/invalid.*email|unable to validate email/i.test(m)) return 'Este e-mail não parece válido.';
+    return 'Não consegui: ' + m;
+  }
+
+  /* primeiro acesso: a pessoa cria a própria conta (fica aguardando a liberação) */
+  function criarConta(nome, email, senha, senha2) {
+    mostrarErroLogin('');
+    nome = String(nome || '').trim();
+    email = String(email || '').trim();
+    if (!nome || !email || !senha) { mostrarErroLogin('Preencha o nome, o e-mail e a senha.'); return Promise.resolve(false); }
+    if (senha.length < 6) { mostrarErroLogin('A senha precisa ter pelo menos 6 caracteres.'); return Promise.resolve(false); }
+    if (senha !== senha2) { mostrarErroLogin('As duas senhas não são iguais.'); return Promise.resolve(false); }
+    $('n-criar').disabled = true;
+    return cliente.auth.signUp({ email: email, password: senha, options: { data: { nome: nome } } }).then(function (r) {
+      if (r.error) { mostrarErroLogin(traduzirErroLogin(r.error)); return false; }
+      // quem cria a conta é quem vai a campo neste celular: o nome dos relatórios passa a ser o dele
+      C.E.nome = nome;
+      C.gravarPref('nome', nome);
+      $('n-senha-nova').value = '';
+      $('n-senha-nova2').value = '';
+      if (!r.data || !r.data.session) {
+        mostrarErroLogin('Conta criada, mas o Supabase pediu para confirmar o e-mail (abra a mensagem que ele mandou e depois entre). ' +
+          'Para não precisar: Authentication › Sign In / Providers › Email › desligar "Confirm email".');
+        return false;
+      }
+      return aoEntrar(r.data.session).then(function () { return true; });
+    }, function (err) {
+      mostrarErroLogin(traduzirErroLogin(err));
+      return false;
+    }).then(function (ok) { $('n-criar').disabled = false; return ok; });
   }
 
   // ================================================================ entrar e sair
@@ -4445,14 +4517,48 @@ window.LOGO_CAROA = { dados: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD
   function aoEntrar(s) {
     sessao = s;
     var uid = s.user.id;
-    var nome = (C.E.nome || '').trim() || String(s.user.email || '').split('@')[0];
+    var meta = (s.user && s.user.user_metadata) || {};
+    var nome = String(meta.nome || '').trim() || (C.E.nome || '').trim() || String(s.user.email || '').split('@')[0];
     return cliente.from('equipe').upsert([{ user_id: uid, email: s.user.email, nome: nome }], { onConflict: 'user_id' }).then(function () {
-      return cliente.from('equipe').select('papel').eq('user_id', uid).maybeSingle();
-    }).then(function (r) {
-      papel = r && r.data ? r.data.papel : 'campo';
-    }, function () { papel = papel || 'campo'; }).then(function () {
-      return C.lerPref('nuvem_uid');
-    }).then(function (antes) {
+      return lerMinhaLinha();
+    }).then(function () {
+      if (aguardando) { esperarLiberacao(); desenharEstado(); return null; }
+      return ligarSincronia();
+    });
+  }
+
+  /* o papel e a liberação desta conta (a linha dela em equipe) */
+  function lerMinhaLinha() {
+    return cliente.from('equipe').select('papel, aprovado').eq('user_id', sessao.user.id).maybeSingle().then(function (r) {
+      if (r && r.error) throw r.error;
+      var l = r && r.data;
+      papel = l ? l.papel : 'campo';
+      aguardando = !(l && (l.aprovado || l.papel === 'analista'));
+    }, function () {
+      // sem sinal: fica como estava (na primeira vez, aguardando, para não mandar nada a quem não pode)
+      if (papel === null) { papel = 'campo'; aguardando = true; }
+    });
+  }
+
+  /* aguardando: a cada 30 s (com o app na frente) pergunta se já liberaram */
+  function esperarLiberacao() {
+    if (relogioLiberacao) return;
+    relogioLiberacao = setInterval(function () {
+      if (!sessao || document.visibilityState !== 'visible') return;
+      lerMinhaLinha().then(function () {
+        if (aguardando) return;
+        clearInterval(relogioLiberacao);
+        relogioLiberacao = null;
+        C.aviso('Conta liberada pela coordenação: enviando o que estava guardado…', 6000);
+        return ligarSincronia();
+      });
+    }, INTERVALO_MS);
+  }
+
+  /* liberada: o primeiro envio deste aparelho e a pergunta a cada 30 s */
+  function ligarSincronia() {
+    var uid = sessao.user.id;
+    return C.lerPref('nuvem_uid').then(function (antes) {
       if (antes === uid) return null;
       // primeiro login neste aparelho (ou outra pessoa): sobe tudo o que já existe e baixa tudo
       var itens = [];
@@ -4463,13 +4569,15 @@ window.LOGO_CAROA = { dados: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD
       return motor.primeiroLogin(itens).then(function () { return C.gravarPref('nuvem_uid', uid); });
     }).then(function () {
       desenharEstado();
-      motor.ligar(INTERVALO_MS, function () { return !!sessao && document.visibilityState === 'visible'; });
+      motor.ligar(INTERVALO_MS, function () { return !!sessao && !aguardando && document.visibilityState === 'visible'; });
       return motor.ciclo();
     }).then(function () { desenharEstado(); });
   }
 
   function sair() {
     motor.desligar();
+    if (relogioLiberacao) { clearInterval(relogioLiberacao); relogioLiberacao = null; }
+    aguardando = false;
     return cliente.auth.signOut().catch(function () { /* sem sinal: a sessão sai do aparelho do mesmo jeito */ }).then(function () {
       sessao = null;
       papel = null;
@@ -4481,12 +4589,34 @@ window.LOGO_CAROA = { dados: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD
 
   function cicloAgora() {
     if (!sessao) return Promise.resolve(null);
+    if (aguardando) {
+      return lerMinhaLinha().then(function () {
+        if (aguardando) { desenharEstado(); return null; }
+        if (relogioLiberacao) { clearInterval(relogioLiberacao); relogioLiberacao = null; }
+        return ligarSincronia();
+      });
+    }
     return motor.ciclo().then(function (r) { desenharEstado(); return r; });
+  }
+
+  // ================================================================ a equipe (Escritório)
+  /* todas as contas (o analista vê todas; as aguardando primeiro) */
+  function listarEquipe() {
+    return cliente.from('equipe').select('user_id, email, nome, papel, aprovado, criado_em').then(function (r) {
+      if (r.error) throw erroNormal(r.error, r.status);
+      return r.data || [];
+    });
+  }
+  /* liberar (ou bloquear de novo) uma conta: só analista (a regra do banco garante) */
+  function liberar(userId, sim) {
+    return cliente.from('equipe').update({ aprovado: sim !== false }).eq('user_id', userId).then(function (r) {
+      if (r.error) throw erroNormal(r.error, r.status);
+    });
   }
 
   /* depois de uma mudança, envia em 2 s (junta várias mudanças seguidas) */
   function enviarLogo() {
-    if (!sessao) return;
+    if (!sessao || aguardando) return;
     clearTimeout(tempoEnvio);
     tempoEnvio = setTimeout(function () { motor.enviar().then(desenharEstado); }, 2000);
   }
@@ -4542,6 +4672,10 @@ window.LOGO_CAROA = { dados: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD
     $('bt-nuvem').onclick = function () { desenharConta(); C.abrirPainel('p-conta'); };
     $('n-entrar').onclick = function () { entrar($('n-email').value, $('n-senha').value); };
     $('n-senha').addEventListener('keydown', function (ev) { if (ev.key === 'Enter') $('n-entrar').click(); });
+    $('n-novo').onclick = function () { mostrarErroLogin(''); $('n-cadastro').hidden = !$('n-cadastro').hidden; };
+    $('n-criar').onclick = function () {
+      criarConta($('n-nome-novo').value, $('n-email-novo').value, $('n-senha-nova').value, $('n-senha-nova2').value);
+    };
     $('n-sair').onclick = function () {
       C.dialogo({
         titulo: 'Sair desta conta?', botoes: [{ rotulo: 'Ficar', valor: false }, { rotulo: 'Sair', valor: true, classe: 'bt-perigo' }],
@@ -4568,7 +4702,8 @@ window.LOGO_CAROA = { dados: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD
   }
 
   window.Nuvem = {
-    iniciar: iniciar, entrar: entrar, sair: sair, cicloAgora: cicloAgora,
+    iniciar: iniciar, entrar: entrar, sair: sair, cicloAgora: cicloAgora, criarConta: criarConta,
+    listarEquipe: listarEquipe, liberar: liberar, aguardando: function () { return aguardando; },
     fichaMudou: fichaMudou, marcaMudou: marcaMudou, conferencia: conferencia, arquivo: arquivo, urlDoArquivo: urlDoArquivo,
     papel: function () { return papel; }, logado: function () { return !!sessao; },
     usuario: function () { return sessao ? sessao.user : null; },
@@ -4590,6 +4725,8 @@ window.LOGO_CAROA = { dados: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD
 (function () {
   'use strict';
   var C = null, aberta = null;
+  // 1.4: as contas criadas no primeiro acesso, aguardando a liberação
+  var equipe = [], relogioEquipe = null;
 
   function $(id) { return document.getElementById(id); }
   function esc(s) {
@@ -4690,6 +4827,24 @@ window.LOGO_CAROA = { dados: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD
     }).join('') : '<li class="vazia">Nenhuma ficha com esses filtros.</li>';
   }
 
+  function desenharEquipe() {
+    var caixa = $('e-equipe');
+    var espera = equipe.filter(function (p) { return !p.aprovado && p.papel !== 'analista'; })
+      .sort(function (a, b) { return String(a.criado_em).localeCompare(String(b.criado_em)); });
+    caixa.hidden = !espera.length;
+    if (!espera.length) { caixa.innerHTML = ''; return; }
+    caixa.innerHTML = '<h3>Aguardando liberação (' + espera.length + ')</h3>' + espera.map(function (p) {
+      return '<div class="pessoa"><span><b>' + esc(p.nome || '(sem nome)') + '</b>' + esc(p.email || '') +
+        (p.criado_em ? ' · desde ' + esc(dataBR(String(p.criado_em).slice(0, 10))) : '') + '</span>' +
+        '<button type="button" class="bt bt-ok" data-liberar="' + esc(p.user_id) + '">✓ Liberar</button></div>';
+    }).join('');
+  }
+
+  function carregarEquipe() {
+    if (!window.Nuvem || !Nuvem.logado()) return Promise.resolve();
+    return Nuvem.listarEquipe().then(function (l) { equipe = l; desenharEquipe(); }, function () { /* sem sinal: fica a lista de antes */ });
+  }
+
   function abrirArquivo(caminho) {
     C.aviso('Abrindo o arquivo…');
     Nuvem.urlDoArquivo(caminho).then(function (url) { C.abrirLink(url); }, function (e) {
@@ -4717,6 +4872,19 @@ window.LOGO_CAROA = { dados: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD
 
   function ligar() {
     ['e-dia', 'e-tecnico', 'e-situacao'].forEach(function (id) { $(id).addEventListener('change', function () { aberta = null; desenhar(); }); });
+    $('e-equipe').addEventListener('click', function (ev) {
+      var b = ev.target.closest('button[data-liberar]');
+      if (!b) return;
+      var uid = b.getAttribute('data-liberar'), p = equipe.find(function (x) { return x.user_id === uid; }) || {};
+      b.disabled = true;
+      Nuvem.liberar(uid, true).then(function () {
+        C.aviso('Liberado: ' + (p.nome || p.email || 'a conta') + '. O que estava guardado no celular dele sobe na próxima conexão.', 6000);
+        return carregarEquipe();
+      }, function (e) {
+        b.disabled = false;
+        C.aviso('Não liberei: ' + e.message, 6000);
+      });
+    });
     $('e-relatorios').addEventListener('click', function (ev) {
       var b = ev.target.closest('button[data-caminho]');
       if (b) abrirArquivo(b.getAttribute('data-caminho'));
@@ -4742,7 +4910,7 @@ window.LOGO_CAROA = { dados: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD
       aberta = aberta === li.getAttribute('data-k') ? null : li.getAttribute('data-k');
       desenhar();
     });
-    $('p-escritorio').querySelector('.voltar').onclick = function () { C.fecharPaineis(); C.abrirPainel('p-conta'); };
+    $('p-escritorio').querySelector('.voltar').onclick = function () { pararEquipe(); C.fecharPaineis(); C.abrirPainel('p-conta'); };
   }
 
   function iniciar(contexto) { C = contexto; ligar(); }
@@ -4752,11 +4920,21 @@ window.LOGO_CAROA = { dados: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD
     aberta = null;
     desenhar();
     C.abrirPainel('p-escritorio');
+    carregarEquipe();
+    pararEquipe();
+    relogioEquipe = setInterval(function () {
+      if ($('p-escritorio').hidden) { pararEquipe(); return; }
+      if (document.visibilityState === 'visible') carregarEquipe();
+    }, 30000);
   }
-  function fechar() { if ($('p-escritorio')) $('p-escritorio').hidden = true; }
+  function pararEquipe() { if (relogioEquipe) clearInterval(relogioEquipe); relogioEquipe = null; }
+  function fechar() { pararEquipe(); if ($('p-escritorio')) $('p-escritorio').hidden = true; }
   function atualizar() { if (C && !$('p-escritorio').hidden) desenhar(); }
 
-  window.Escritorio = { iniciar: iniciar, abrir: abrir, fechar: fechar, atualizar: atualizar, diaDa: function (f) { return diaDa(f); } };
+  window.Escritorio = {
+    iniciar: iniciar, abrir: abrir, fechar: fechar, atualizar: atualizar, carregarEquipe: carregarEquipe,
+    diaDa: function (f) { return diaDa(f); },
+  };
 })();
 
 </script>
@@ -4769,7 +4947,7 @@ window.LOGO_CAROA = { dados: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD
  */
 (function () {
   'use strict';
-  var VERSAO_APP = '1.3';
+  var VERSAO_APP = '1.4';
   var N = window.Nucleo;
   var ANDROID = window.CaroaMapsAndroid || null;
   // iPadOS se diz "Macintosh", mas tem toque
