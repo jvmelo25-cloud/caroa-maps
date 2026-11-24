@@ -985,8 +985,6 @@ input, textarea { font: inherit; -webkit-user-select: text; user-select: text; }
 .e-detalhe .marcas { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
 .e-detalhe textarea { width: 100%; margin-top: 4px; border: 2px solid var(--linha); border-radius: 10px; padding: 8px 10px; min-height: 60px; font-size: 15px; }
 /* primeiro acesso e liberação (1.4) */
-.n-novo { display: block; margin: 12px auto 0; }
-.n-cadastro { margin-top: 8px; background: var(--branco); border-radius: 12px; padding: 4px 12px 12px; }
 .e-equipe { background: #fff4d6; border: 1px solid #e3b23c; border-radius: 12px; padding: 10px 12px; margin-bottom: 10px; }
 .e-equipe h3 { margin: 0 0 6px; font-size: 15px; color: #4a3500; }
 .e-equipe .pessoa { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-top: 1px solid rgba(0,0,0,.08); }
@@ -1098,19 +1096,10 @@ input, textarea { font: inherit; -webkit-user-select: text; user-select: text; }
   <header class="p-cab"><button class="voltar" type="button" aria-label="Voltar">←</button><h2>Conta e envio</h2></header>
   <div class="p-corpo">
     <div id="n-fora">
-      <p class="dica">Entre com o login que a coordenação criou para você. Sem entrar, o app funciona igual e guarda tudo no celular; ao entrar, tudo sobe.</p>
-      <label class="campo">E-mail<input id="n-email" type="email" autocomplete="username" inputmode="email" autocapitalize="off" spellcheck="false"></label>
+      <p class="dica">Entre com o usuário e a senha que a coordenação passou para você. Sem entrar, o app funciona igual e guarda tudo no celular; ao entrar, tudo sobe.</p>
+      <label class="campo">Usuário<input id="n-email" type="text" autocomplete="username" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="ex.: carla"></label>
       <label class="campo">Senha<input id="n-senha" type="password" autocomplete="current-password"></label>
       <button id="n-entrar" class="bt bt-grande bt-ok" type="button">Entrar</button>
-      <button id="n-novo" class="bt-link n-novo" type="button">Primeiro acesso? Criar minha conta</button>
-      <div id="n-cadastro" class="n-cadastro" hidden>
-        <p class="dica">A conta fica aguardando a coordenação liberar. Enquanto isso o app funciona normalmente e guarda tudo no celular.</p>
-        <label class="campo">Seu nome (vai nos relatórios)<input id="n-nome-novo" type="text" autocomplete="name"></label>
-        <label class="campo">E-mail<input id="n-email-novo" type="email" autocomplete="username" inputmode="email" autocapitalize="off" spellcheck="false"></label>
-        <label class="campo">Senha (pelo menos 6 caracteres)<input id="n-senha-nova" type="password" autocomplete="new-password"></label>
-        <label class="campo">Repita a senha<input id="n-senha-nova2" type="password" autocomplete="new-password"></label>
-        <button id="n-criar" class="bt bt-grande" type="button">Criar minha conta</button>
-      </div>
       <p id="n-erro" class="n-erro" hidden></p>
     </div>
     <div id="n-dentro" hidden>
@@ -4348,6 +4337,8 @@ window.LOGO_CAROA = { dados: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD
   var CHAVE_PUBLICA = 'sb_publishable_2CxcYoRN13PhilPYPSx30w_IkwDWzSo';
   var BALDE = 'campo';
   var INTERVALO_MS = 30000;
+  // o usuário que a coordenação cria no 02_equipe.sql (criar_acesso) vira este e-mail
+  var DOMINIO_DA_EQUIPE = 'equipe.caroatopoagri.com.br';
   var S = window.Sincronia;
   var C = null, cliente = null, motor = null, sessao = null, papel = null, ultimoEstado = null, tempoEnvio = null;
   // 1.4: conta criada no primeiro acesso fica AGUARDANDO até um analista liberar;
@@ -4435,7 +4426,7 @@ window.LOGO_CAROA = { dados: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD
     $('n-papel').textContent = papel === 'analista' ? 'analista (escritório)' : aguardando ? 'campo · aguardando liberação' : 'campo';
     var linhas = [];
     if (aguardando) {
-      linhas.push('⏳ Conta criada: aguardando a coordenação liberar.');
+      linhas.push('⏳ Este acesso ainda não foi liberado pela coordenação.');
       linhas.push('Pode trabalhar normalmente: tudo fica guardado no celular' + (e.pendentes ? ' (' + e.pendentes + ' por enviar)' : '') +
         ' e sobe sozinho quando liberar.');
       $('n-estado').textContent = linhas.join('\n');
@@ -4459,50 +4450,26 @@ window.LOGO_CAROA = { dados: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD
 
   function traduzirErroLogin(err) {
     var m = String((err && err.message) || err || '');
-    if (/invalid login credentials/i.test(m)) return 'E-mail ou senha errados.';
+    if (/invalid login credentials/i.test(m)) return 'Usuário ou senha errados.';
     if (/email not confirmed/i.test(m)) return 'Este login ainda não foi confirmado. No painel do Supabase (Authentication › Users), confirme o usuário.';
     if (/fetch|network|load failed/i.test(m)) return 'Sem sinal: tente de novo com internet.';
-    if (/already registered|already been registered|user already exists/i.test(m)) return 'Já existe uma conta com este e-mail: use "Entrar".';
-    if (/signups? not allowed|signup is disabled/i.test(m)) return 'O cadastro pelo app está desligado no Supabase (Authentication › Sign In / Providers › Allow new users to sign up).';
-    if (/password should be at least|weak password/i.test(m)) return 'A senha precisa ter pelo menos 6 caracteres.';
-    if (/invalid.*email|unable to validate email/i.test(m)) return 'Este e-mail não parece válido.';
-    return 'Não consegui: ' + m;
-  }
-
-  /* primeiro acesso: a pessoa cria a própria conta (fica aguardando a liberação) */
-  function criarConta(nome, email, senha, senha2) {
-    mostrarErroLogin('');
-    nome = String(nome || '').trim();
-    email = String(email || '').trim();
-    if (!nome || !email || !senha) { mostrarErroLogin('Preencha o nome, o e-mail e a senha.'); return Promise.resolve(false); }
-    if (senha.length < 6) { mostrarErroLogin('A senha precisa ter pelo menos 6 caracteres.'); return Promise.resolve(false); }
-    if (senha !== senha2) { mostrarErroLogin('As duas senhas não são iguais.'); return Promise.resolve(false); }
-    $('n-criar').disabled = true;
-    return cliente.auth.signUp({ email: email, password: senha, options: { data: { nome: nome } } }).then(function (r) {
-      if (r.error) { mostrarErroLogin(traduzirErroLogin(r.error)); return false; }
-      // quem cria a conta é quem vai a campo neste celular: o nome dos relatórios passa a ser o dele
-      C.E.nome = nome;
-      C.gravarPref('nome', nome);
-      $('n-senha-nova').value = '';
-      $('n-senha-nova2').value = '';
-      if (!r.data || !r.data.session) {
-        mostrarErroLogin('Conta criada, mas o Supabase pediu para confirmar o e-mail (abra a mensagem que ele mandou e depois entre). ' +
-          'Para não precisar: Authentication › Sign In / Providers › Email › desligar "Confirm email".');
-        return false;
-      }
-      return aoEntrar(r.data.session).then(function () { return true; });
-    }, function (err) {
-      mostrarErroLogin(traduzirErroLogin(err));
-      return false;
-    }).then(function (ok) { $('n-criar').disabled = false; return ok; });
+    if (/banned/i.test(m)) return 'Este acesso foi bloqueado pela coordenação.';
+    if (/invalid.*email|unable to validate email/i.test(m)) return 'Usuário inválido.';
+    return 'Não consegui entrar: ' + m;
   }
 
   // ================================================================ entrar e sair
-  function entrar(email, senha) {
+  /* "carla" -> carla@equipe.caroatopoagri.com.br (o mesmo do criar_acesso); e-mail inteiro passa como está */
+  function emailDoUsuario(u) {
+    var t = String(u || '').trim().toLowerCase();
+    return !t || t.indexOf('@') >= 0 ? t : t + '@' + DOMINIO_DA_EQUIPE;
+  }
+
+  function entrar(usuario, senha) {
     mostrarErroLogin('');
-    if (!email || !senha) { mostrarErroLogin('Preencha o e-mail e a senha.'); return Promise.resolve(false); }
+    if (!String(usuario || '').trim() || !senha) { mostrarErroLogin('Preencha o usuário e a senha.'); return Promise.resolve(false); }
     $('n-entrar').disabled = true;
-    return cliente.auth.signInWithPassword({ email: email.trim(), password: senha }).then(function (r) {
+    return cliente.auth.signInWithPassword({ email: emailDoUsuario(usuario), password: senha }).then(function (r) {
       if (r.error) { mostrarErroLogin(traduzirErroLogin(r.error)); return false; }
       $('n-senha').value = '';
       return aoEntrar(r.data.session).then(function () { return true; });
@@ -4672,10 +4639,6 @@ window.LOGO_CAROA = { dados: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD
     $('bt-nuvem').onclick = function () { desenharConta(); C.abrirPainel('p-conta'); };
     $('n-entrar').onclick = function () { entrar($('n-email').value, $('n-senha').value); };
     $('n-senha').addEventListener('keydown', function (ev) { if (ev.key === 'Enter') $('n-entrar').click(); });
-    $('n-novo').onclick = function () { mostrarErroLogin(''); $('n-cadastro').hidden = !$('n-cadastro').hidden; };
-    $('n-criar').onclick = function () {
-      criarConta($('n-nome-novo').value, $('n-email-novo').value, $('n-senha-nova').value, $('n-senha-nova2').value);
-    };
     $('n-sair').onclick = function () {
       C.dialogo({
         titulo: 'Sair desta conta?', botoes: [{ rotulo: 'Ficar', valor: false }, { rotulo: 'Sair', valor: true, classe: 'bt-perigo' }],
@@ -4702,7 +4665,7 @@ window.LOGO_CAROA = { dados: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD
   }
 
   window.Nuvem = {
-    iniciar: iniciar, entrar: entrar, sair: sair, cicloAgora: cicloAgora, criarConta: criarConta,
+    iniciar: iniciar, entrar: entrar, sair: sair, cicloAgora: cicloAgora, emailDoUsuario: emailDoUsuario,
     listarEquipe: listarEquipe, liberar: liberar, aguardando: function () { return aguardando; },
     fichaMudou: fichaMudou, marcaMudou: marcaMudou, conferencia: conferencia, arquivo: arquivo, urlDoArquivo: urlDoArquivo,
     papel: function () { return papel; }, logado: function () { return !!sessao; },
@@ -4947,7 +4910,7 @@ window.LOGO_CAROA = { dados: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD
  */
 (function () {
   'use strict';
-  var VERSAO_APP = '1.4';
+  var VERSAO_APP = '1.5';
   var N = window.Nucleo;
   var ANDROID = window.CaroaMapsAndroid || null;
   // iPadOS se diz "Macintosh", mas tem toque
