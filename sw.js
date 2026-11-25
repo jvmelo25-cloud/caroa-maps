@@ -1,8 +1,8 @@
-/* Caroá Maps 1.6 — guarda o app no aparelho (gerado pelo montar_site.py).
+/* Caroá Maps 1.7 — guarda o app no aparelho (gerado pelo montar_site.py).
    A página: da rede quando há sinal (espera no máximo 3 s), senão a guardada.
    O resto (ícones, manifesto): o guardado. Os mapas e as marcas ficam no
    IndexedDB do app, não aqui. */
-var CACHE = 'caroa-maps-1.6';
+var CACHE = 'caroa-maps-1.7';
 var ARQUIVOS = ['./', './index.html', './manifest.webmanifest', './icone-180.png', './icone-192.png',
   './icone-512.png', './icone-mascara-512.png'];
 

@@ -963,6 +963,29 @@ input, textarea { font: inherit; -webkit-user-select: text; user-select: text; }
 .num-grande.voltar { background: #e53935; color: #fff; border-color: #b71c1c; }
 .lista li .num-p.voltar { background: #e53935; color: #fff; border-color: #b71c1c; }
 .c-retorno { margin-top: 8px; background: #fde8e7; color: #9b1c17; border-radius: 10px; padding: 8px 10px; font-weight: 700; white-space: pre-line; }
+/* 1.7: colegas no mapa (roxo: diferente do GPS azul e dos lotes) */
+.colega { overflow: visible; }
+.colega i { position: absolute; left: 0; top: 0; width: 16px; height: 16px; border-radius: 50%; background: #7b1fa2;
+  border: 3px solid #fff; box-shadow: 0 0 0 2px #7b1fa2; box-sizing: border-box; }
+.colega b { position: absolute; left: 20px; top: -6px; white-space: nowrap; background: #fff; color: #4a148c; border-radius: 8px;
+  padding: 1px 6px; font-size: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.35); }
+.colega span { position: absolute; left: 21px; top: 14px; white-space: nowrap; font-size: 10.5px; color: #fff; font-weight: 700;
+  text-shadow: 0 0 3px #000, 0 0 2px #000; }
+.colega.velho { opacity: .5; }
+.n-jornada { margin-top: 12px; background: var(--branco); border-radius: 12px; padding: 12px; }
+.n-jornada .dica { margin: 8px 0 0; }
+.e-equipe-agora { background: #f3e5f5; border: 1px solid #ce93d8; border-radius: 12px; padding: 10px 12px; margin-bottom: 10px; }
+.e-equipe-agora h3 { margin: 0 0 6px; font-size: 15px; color: #4a148c; }
+.e-equipe-agora .pessoa { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-top: 1px solid rgba(0,0,0,.08); }
+.e-equipe-agora .pessoa:first-of-type { border-top: 0; }
+.e-equipe-agora .pessoa span { flex: 1; min-width: 0; font-size: 14px; }
+.e-equipe-agora .pessoa b { display: block; }
+.e-equipe-agora .pessoa.velho { opacity: .6; }
+.e-equipe-agora .bt { flex: none; min-height: 38px; font-size: 13px; padding: 0 10px; }
+/* 1.7: igual à anterior e a ficha falada */
+.f-ferramentas { flex: none; display: flex; gap: 8px; padding: 8px 12px; background: var(--branco); border-bottom: 1px solid var(--linha); }
+.f-ferramentas .bt { flex: 1 1 auto; min-height: 44px; font-size: 15px; }
+#f-falar.ouvindo { background: #e53935; border-color: #e53935; color: #fff; }
 /* 1.6: apagar ficha (analista) e a lixeira do Escritório */
 .f-apagar { display: block; margin: 6px auto 0; color: #c62828; }
 .e-lista li [data-restaurar] { flex: none; min-height: 40px; font-size: 14px; padding: 0 12px; }
@@ -1112,6 +1135,10 @@ input, textarea { font: inherit; -webkit-user-select: text; user-select: text; }
     <div id="n-dentro" hidden>
       <div class="n-quem"><b id="n-email-txt"></b><span id="n-papel"></span></div>
       <div id="n-estado" class="n-estado"></div>
+      <div id="n-jornada-caixa" class="n-jornada" hidden>
+        <button id="n-jornada" class="bt bt-grande bt-ok" type="button">▶ Começar o dia</button>
+        <p id="n-jornada-txt" class="dica"></p>
+      </div>
       <button id="n-enviar" class="bt bt-grande" type="button">☁ Enviar e receber agora</button>
       <button id="n-escritorio" class="bt bt-grande n-escritorio" type="button" hidden>🗂 Escritório (analistas)</button>
       <button id="n-sair" class="bt-link" type="button">Sair desta conta</button>
@@ -1135,6 +1162,7 @@ input, textarea { font: inherit; -webkit-user-select: text; user-select: text; }
   </div>
   <div class="p-corpo e-corpo">
     <div id="e-equipe" class="e-equipe" hidden></div>
+    <div id="e-equipe-agora" class="e-equipe-agora" hidden></div>
     <div id="e-relatorios" class="e-relatorios"></div>
     <ol id="e-itens" class="lista e-lista"></ol>
   </div>
@@ -1142,6 +1170,7 @@ input, textarea { font: inherit; -webkit-user-select: text; user-select: text; }
 
 <section id="p-ficha" class="painel" hidden>
   <header class="p-cab"><button class="voltar" type="button" aria-label="Voltar">←</button><h2 id="f-titulo">Ficha de campo</h2><span id="f-andamento" class="f-andamento"></span></header>
+  <div class="f-ferramentas"><button id="f-anterior" class="bt" type="button" hidden>↺ Igual à anterior</button><button id="f-falar" class="bt" type="button">🎤 Falar</button></div>
   <div class="p-corpo f-corpo" id="f-corpo"></div>
   <div class="f-rodape"><button id="f-pdf" class="bt bt-grande bt-ok" type="button">📄 PDF da ficha (enviar)</button>
     <button id="f-apagar" class="bt-link f-apagar" type="button" hidden>🗑 Apagar esta ficha</button></div>
@@ -1850,6 +1879,8 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       return completar({
         n: Number(i.n), numero: i.numero, origem: i.origem, lat: Number(i.lat), lon: Number(i.lon),
         link: i.link, aneis: i.aneis, nome: i.numero || '',
+        // 1.7: a rua do lote (das guias do cadastro, no plugin); a ficha nova nasce com ela
+        rua: i.rua == null ? '' : String(i.rua),
       });
     }).sort(function (a, b) { return a.n - b.n; });
     if (!itens.length) throw new Error('O pacote não tem nenhum lote.');
@@ -2832,7 +2863,25 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       tecnico: opcoes.tecnico || '', auxiliar: opcoes.auxiliar || '',
       id_vetorizacao: item && item.numero ? String(item.numero) : '',
     };
+    // 1.7: a rua do lote, quando o pacote do QGIS traz (das guias do cadastro)
+    if (item && item.rua) d.logradouro = String(item.rua);
     return d;
+  }
+
+  /* 1.7: "Igual à anterior" — o que costuma se repetir na mesma rua. Copia da
+     ficha anterior só para os campos VAZIOS desta (o que já foi digitado fica)
+     e devolve os ids copiados. */
+  var CAMPOS_DA_ANTERIOR = ['logradouro', 'bairro', 'cep', 'distrito', 'ocupacao', 'situacao_quadra', 'topografia',
+    'fechamento', 'calcada'];
+  function copiarDaAnterior(dados, anterior) {
+    var copiados = [];
+    if (!dados || !anterior) return copiados;
+    CAMPOS_DA_ANTERIOR.forEach(function (id) {
+      if (preenchido(dados[id]) || !preenchido(anterior[id])) return;
+      dados[id] = Array.isArray(anterior[id]) ? anterior[id].slice() : anterior[id];
+      copiados.push(id);
+    });
+    return copiados;
   }
 
   function nomeDoArquivo(ficha) {
@@ -2868,6 +2917,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     andamento: andamento, preencherDoLevantamento: preencherDoLevantamento, dadosIniciais: dadosIniciais,
     nomeDoArquivo: nomeDoArquivo, idsDaLinha: idsDaLinha, preenchido: preenchido,
     precisaVoltar: precisaVoltar, diaDaFicha: diaDaFicha,
+    CAMPOS_DA_ANTERIOR: CAMPOS_DA_ANTERIOR, copiarDaAnterior: copiarDaAnterior,
   };
 });
 
@@ -3407,6 +3457,248 @@ window.LOGO_CAROA = { dados: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD
 </script>
 <script>
 /*
+ * Caroá Maps — a FICHA FALADA (1.7): o que o técnico fala ("casa de
+ * alvenaria, residencial, dois pavimentos, conservação boa") vira as opções
+ * da ficha.
+ *   - Só marca valores que existem no modelo da ficha (o teste confere).
+ *   - Palavra que serve a dois campos (cerâmica: cobertura ou revestimento;
+ *     madeira; metálica) e as do padrão (baixo, médio, alto: "muro alto" não é
+ *     padrão alto) só marcam com o campo dito antes: "telhado de cerâmica",
+ *     "revestimento de madeira", "padrão médio". Sozinhas, voltam em
+ *     naoEntendidos.
+ *   - Depois de "observação", o resto da fala vai inteiro para Observações.
+ * Roda no navegador (window.Voz) e no Node (testes/teste_voz.mjs).
+ */
+(function (raiz, fabrica) {
+  'use strict';
+  var V = fabrica();
+  if (typeof module === 'object' && module.exports) module.exports = V;
+  else raiz.Voz = V;
+})(typeof self !== 'undefined' ? self : this, function () {
+  'use strict';
+
+  function normal(s) {
+    return String(s == null ? '' : s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+  }
+
+  var RETORNO = 'Imóvel fechado ou sem informante (agendar retorno)';
+  var CONFIRMADO = 'Confirmado em campo sem documentação apresentada';
+
+  // o que se fala (sem acento, minúsculo) -> campo, valor do modelo
+  var FRASES = [
+    // uso
+    ['residencial', 'uso', 'Residencial'], ['residencia', 'uso', 'Residencial'], ['moradia', 'uso', 'Residencial'],
+    ['comercial', 'uso', 'Comercial'], ['comercio', 'uso', 'Comercial'], ['servicos', 'uso', 'Serviços'],
+    ['servico', 'uso', 'Serviços'], ['industrial', 'uso', 'Industrial'], ['industria', 'uso', 'Industrial'],
+    ['misto', 'uso', 'Misto'], ['religioso', 'uso', 'Religioso'], ['igreja', 'uso', 'Religioso'],
+    ['publico', 'uso', 'Público'], ['publica', 'uso', 'Público'],
+    // tipo
+    ['casa', 'tipo', 'Casa'], ['apartamento', 'tipo', 'Apartamento'], ['sala', 'tipo', 'Sala / loja'],
+    ['loja', 'tipo', 'Sala / loja'], ['galpao', 'tipo', 'Galpão'], ['telheiro', 'tipo', 'Telheiro'],
+    // posição e alinhamento
+    ['isolada', 'posicao', 'Isolada'], ['isolado', 'posicao', 'Isolada'], ['geminada', 'posicao', 'Geminada'],
+    ['geminado', 'posicao', 'Geminada'], ['conjugada', 'posicao', 'Conjugada'], ['conjugado', 'posicao', 'Conjugada'],
+    ['no alinhamento', 'alinhamento', 'No alinhamento'], ['alinhada', 'alinhamento', 'No alinhamento'],
+    ['alinhado', 'alinhamento', 'No alinhamento'], ['recuada', 'alinhamento', 'Recuada'], ['recuado', 'alinhamento', 'Recuada'],
+    // estrutura
+    ['alvenaria', 'estrutura', 'Alvenaria'], ['tijolo', 'estrutura', 'Alvenaria'], ['mista', 'estrutura', 'Mista'],
+    ['concreto armado', 'estrutura', 'Concreto armado'], ['concreto', 'estrutura', 'Concreto armado'],
+    // cobertura
+    ['fibrocimento', 'cobertura', 'Fibrocimento'], ['brasilit', 'cobertura', 'Fibrocimento'],
+    ['eternit', 'cobertura', 'Fibrocimento'], ['laje', 'cobertura', 'Laje'],
+    // revestimento
+    ['sem revestimento', 'revestimento', 'Sem revestimento'], ['reboco', 'revestimento', 'Reboco'],
+    ['rebocada', 'revestimento', 'Reboco'], ['rebocado', 'revestimento', 'Reboco'], ['pintura', 'revestimento', 'Pintura'],
+    ['pintada', 'revestimento', 'Pintura'], ['pintado', 'revestimento', 'Pintura'],
+    ['pastilha', 'revestimento', 'Cerâmica / pastilha'],
+    // padrão e conservação
+    ['popular', 'padrao', 'Popular'],
+    ['otimo', 'conservacao', 'Ótimo'], ['otima', 'conservacao', 'Ótimo'], ['bom', 'conservacao', 'Bom'],
+    ['boa', 'conservacao', 'Bom'], ['regular', 'conservacao', 'Regular'], ['ruim', 'conservacao', 'Ruim'],
+    ['pessimo', 'conservacao', 'Péssimo'], ['pessima', 'conservacao', 'Péssimo'],
+    // terreno
+    ['edificado', 'ocupacao', 'Edificado'], ['edificada', 'ocupacao', 'Edificado'],
+    ['terreno vago', 'ocupacao', 'Terreno vago'], ['vago', 'ocupacao', 'Terreno vago'], ['baldio', 'ocupacao', 'Terreno vago'],
+    ['em construcao', 'ocupacao', 'Em construção'], ['obra', 'ocupacao', 'Em construção'],
+    ['demolido', 'ocupacao', 'Demolido / ruínas'], ['demolida', 'ocupacao', 'Demolido / ruínas'],
+    ['ruinas', 'ocupacao', 'Demolido / ruínas'], ['ruina', 'ocupacao', 'Demolido / ruínas'],
+    ['meio de quadra', 'situacao_quadra', 'Meio de quadra'], ['meio da quadra', 'situacao_quadra', 'Meio de quadra'],
+    ['esquina', 'situacao_quadra', 'Esquina'], ['encravado', 'situacao_quadra', 'Encravado'],
+    ['encravada', 'situacao_quadra', 'Encravado'], ['vila', 'situacao_quadra', 'Vila / condomínio'],
+    ['condominio', 'situacao_quadra', 'Vila / condomínio'], ['gleba', 'situacao_quadra', 'Gleba'],
+    ['plano', 'topografia', 'Plano'], ['plana', 'topografia', 'Plano'], ['aclive', 'topografia', 'Aclive'],
+    ['declive', 'topografia', 'Declive'], ['irregular', 'topografia', 'Irregular'],
+    ['muro', 'fechamento', 'Muro'], ['cerca', 'fechamento', 'Cerca'], ['gradil', 'fechamento', 'Gradil'],
+    ['grade', 'fechamento', 'Gradil'], ['sem fechamento', 'fechamento', 'Sem fechamento'],
+    ['sem calcada', 'calcada', 'Inexistente'], ['com calcada', 'calcada', 'Existente'], ['tem calcada', 'calcada', 'Existente'],
+    ['calcada', 'calcada', 'Existente'], ['existente', 'calcada', 'Existente'], ['inexistente', 'calcada', 'Inexistente'],
+    // distrito
+    ['sede', 'distrito', 'Sede'], ['santa terezinha', 'distrito', 'Santa Terezinha'], ['quebrado', 'distrito', 'Quebrado'],
+    ['santa rosa', 'distrito', 'Santa Rosa'], ['sao bento', 'distrito', 'São Bento'],
+    // motivo e causa (várias)
+    ['nao identificado', 'motivo', 'Imóvel não identificado na ortofoto pelo vetorizador'],
+    ['ausente da base', 'motivo', 'Imóvel identificado na imagem e ausente da base cadastral'],
+    ['divergencia de area', 'motivo', 'Divergência de área construída em relação ao cadastro'],
+    ['divergencia de uso', 'motivo', 'Divergência de uso ou de ocupação do imóvel'],
+    ['vegetacao', 'causa', 'Vegetação/copa'], ['copa', 'causa', 'Vegetação/copa'], ['arvore', 'causa', 'Vegetação/copa'],
+    ['arvores', 'causa', 'Vegetação/copa'], ['sombra', 'causa', 'Sombra'], ['sobreposta', 'causa', 'Cobertura sobreposta'],
+    ['defeito na imagem', 'causa', 'Defeito na imagem'], ['defeito', 'causa', 'Defeito na imagem'],
+    // situação cadastral (várias)
+    ['construcao nova', 'situacao_cadastral', 'Construção nova em lote já cadastrado'],
+    ['desmembramento', 'situacao_cadastral', 'Desmembramento não averbado'],
+    ['remembramento', 'situacao_cadastral', 'Remembramento (unificação) não averbado'],
+    ['unificacao', 'situacao_cadastral', 'Remembramento (unificação) não averbado'],
+    ['loteamento irregular', 'situacao_cadastral', 'Ocupação sem registro / loteamento irregular'],
+    ['sem registro', 'situacao_cadastral', 'Ocupação sem registro / loteamento irregular'],
+    // informante e resultado
+    ['proprietario', 'vinculo', 'Proprietário'], ['proprietaria', 'vinculo', 'Proprietário'], ['dono', 'vinculo', 'Proprietário'],
+    ['dona', 'vinculo', 'Proprietário'], ['inquilino', 'vinculo', 'Inquilino'], ['inquilina', 'vinculo', 'Inquilino'],
+    ['familiar', 'vinculo', 'Familiar'], ['parente', 'vinculo', 'Familiar'], ['vizinho', 'vinculo', 'Vizinho'],
+    ['vizinha', 'vinculo', 'Vizinho'], ['sem informante', 'vinculo', 'Sem informante'],
+    ['nao apresentado', 'documento', 'Não apresentado'], ['sem documento', 'documento', 'Não apresentado'],
+    ['apresentou documento', 'documento', 'Apresentado espontaneamente'],
+    ['mostrou documento', 'documento', 'Apresentado espontaneamente'],
+    ['confirmado', 'resultado', CONFIRMADO],
+    ['confirmado com documento', 'resultado', 'Confirmado com documento apresentado espontaneamente'],
+    ['fechado', 'resultado', RETORNO], ['fechada', 'resultado', RETORNO], ['ninguem em casa', 'resultado', RETORNO],
+    ['agendar retorno', 'resultado', RETORNO], ['acesso negado', 'resultado', 'Acesso negado pelo ocupante'],
+    ['nao deixou entrar', 'resultado', 'Acesso negado pelo ocupante'], ['recusou', 'resultado', 'Acesso negado pelo ocupante'],
+  ];
+
+  // a palavra que só vale com o campo dito antes ("telhado de cerâmica")
+  var AMBIGUOS = {
+    madeira: { estrutura: 'Madeira', revestimento: 'Madeira' },
+    metalica: { estrutura: 'Metálica', cobertura: 'Metálica' }, metalico: { estrutura: 'Metálica', cobertura: 'Metálica' },
+    ceramica: { cobertura: 'Cerâmica', revestimento: 'Cerâmica / pastilha' },
+    ceramico: { cobertura: 'Cerâmica', revestimento: 'Cerâmica / pastilha' },
+    baixo: { padrao: 'Baixo' }, medio: { padrao: 'Médio' }, alto: { padrao: 'Alto' },
+  };
+  // a palavra que diz de que campo é o que vem depois ("casa de madeira" = estrutura)
+  var CONTEXTO = {
+    estrutura: 'estrutura', estrutural: 'estrutura', casa: 'estrutura',
+    cobertura: 'cobertura', telhado: 'cobertura', telha: 'cobertura', telhas: 'cobertura',
+    revestimento: 'revestimento', revestida: 'revestimento', revestido: 'revestimento', acabamento: 'revestimento',
+    fachada: 'revestimento', padrao: 'padrao', conservacao: 'conservacao', estado: 'conservacao',
+    uso: 'uso', tipo: 'tipo', topografia: 'topografia', fechamento: 'fechamento',
+  };
+  var NUMEROS = { um: 1, uma: 1, dois: 2, duas: 2, tres: 3, quatro: 4, cinco: 5, seis: 6, sete: 7, oito: 8, nove: 9, dez: 10 };
+  var PAVIMENTOS = { pavimento: 1, pavimentos: 1, andar: 1, andares: 1, piso: 1, pisos: 1 };
+  var NUMERO_DA_CASA = { numero: 1, num: 1, n: 1, 'nº': 1 };
+  var OBSERVACAO = { observacao: 1, observacoes: 1, obs: 1 };
+  var STOP = {};
+  ('de da do das dos e com a o as os em na no nas nos um uma tem ta esta estava eh que pra para ja so mais muito ' +
+   'bem ai la aqui tambem imovel lote terreno ele ela tipo').split(' ').forEach(function (p) { STOP[p] = 1; });
+
+  var MAPA = {}, MAIOR = 1;
+  FRASES.forEach(function (f) {
+    MAPA[f[0]] = { campo: f[1], valor: f[2] };
+    MAIOR = Math.max(MAIOR, f[0].split(' ').length);
+  });
+
+  // o que o teste confere no modelo
+  var ALVOS = FRASES.map(function (f) { return [f[1], f[2]]; });
+  Object.keys(AMBIGUOS).forEach(function (p) {
+    Object.keys(AMBIGUOS[p]).forEach(function (c) { ALVOS.push([c, AMBIGUOS[p][c]]); });
+  });
+
+  var ROTULO_DA_GRADE = { motivo: 'Motivo', situacao_cadastral: 'Situação cadastral', resultado: 'Resultado' };
+
+  /* os campos do modelo: rótulo e se aceita várias opções */
+  function camposDo(modelo) {
+    var c = {};
+    (modelo && modelo.secoes || []).forEach(function (s) {
+      s.linhas.forEach(function (l) {
+        if (l.opcoes) c[l.opcoes.id] = { rotulo: l.opcoes.rotulo, varias: l.opcoes.escolha === 'varias' };
+        if (l.grade) c[l.grade.id] = { rotulo: ROTULO_DA_GRADE[l.grade.id] || l.grade.id, varias: l.grade.escolha === 'varias' };
+        (l.campos || []).forEach(function (k) { c[k.id] = { rotulo: k.rotulo, varias: false }; });
+      });
+    });
+    return c;
+  }
+
+  function numeroDe(t) {
+    if (/^\d+$/.test(t)) return String(Number(t));
+    return NUMEROS[t] ? String(NUMEROS[t]) : null;
+  }
+
+  /*
+   * texto (o que o reconhecedor de voz devolveu) e o modelo da ficha ->
+   *   {dados: {campo: valor | [valores]}, entendidos: ['Uso: Residencial', …],
+   *    naoEntendidos: ['portão', …], observacao: '…' | null}
+   */
+  function interpretar(texto, modelo) {
+    var original = String(texto == null ? '' : texto);
+    var campos = camposDo(modelo);
+    var achados = [], re = /[\p{L}\p{N}º]+/gu, m;
+    while ((m = re.exec(original))) achados.push({ t: m[0], n: normal(m[0]), fim: m.index + m[0].length });
+    var r = { dados: {}, entendidos: [], naoEntendidos: [], observacao: null };
+
+    // depois de "observação", o resto vai inteiro para as Observações
+    for (var k = 0; k < achados.length; k++) {
+      if (OBSERVACAO[achados[k].n]) {
+        var resto = original.slice(achados[k].fim).replace(/^[\s,.:;!?–-]+/, '').trim();
+        if (resto) r.observacao = resto;
+        achados = achados.slice(0, k);
+        break;
+      }
+    }
+
+    function marcar(campo, valor) {
+      var c = campos[campo] || { rotulo: campo, varias: false };
+      if (c.varias) {
+        var lista = r.dados[campo] || (r.dados[campo] = []);
+        if (lista.indexOf(valor) >= 0) return;
+        lista.push(valor);
+      } else {
+        r.dados[campo] = valor;
+      }
+      var rotulo = c.rotulo + ': ' + valor;
+      if (r.entendidos.indexOf(rotulo) < 0) r.entendidos.push(rotulo);
+    }
+    function naoEntendi(t) { if (r.naoEntendidos.indexOf(t) < 0) r.naoEntendidos.push(t); }
+
+    var contexto = null, i = 0;
+    while (i < achados.length) {
+      var a = achados[i], prox = achados[i + 1];
+      // "dois pavimentos", "3 andares"
+      var num = numeroDe(a.n);
+      if (num && prox && PAVIMENTOS[prox.n]) { marcar('pavimentos', num); i += 2; continue; }
+      if (a.n === 'terrea' || a.n === 'terreo') { marcar('pavimentos', '1'); i++; continue; }
+      // "número 510"
+      if (NUMERO_DA_CASA[a.n] && prox && /^\d+$/.test(prox.n)) { marcar('numero', prox.n); i += 2; continue; }
+      // a frase mais comprida que casa aqui
+      var casou = false;
+      for (var tam = Math.min(MAIOR, achados.length - i); tam >= 1; tam--) {
+        var chave = achados.slice(i, i + tam).map(function (x) { return x.n; }).join(' ');
+        var f = MAPA[chave];
+        if (f) {
+          marcar(f.campo, f.valor);
+          if (tam === 1 && CONTEXTO[chave]) contexto = CONTEXTO[chave];
+          i += tam;
+          casou = true;
+          break;
+        }
+      }
+      if (casou) continue;
+      if (CONTEXTO[a.n]) { contexto = CONTEXTO[a.n]; i++; continue; }
+      if (AMBIGUOS[a.n]) {
+        if (contexto && AMBIGUOS[a.n][contexto]) marcar(contexto, AMBIGUOS[a.n][contexto]);
+        else naoEntendi(a.t);
+        i++;
+        continue;
+      }
+      if (!STOP[a.n] && !NUMEROS[a.n]) naoEntendi(a.t);
+      i++;
+    }
+    return r;
+  }
+
+  return { interpretar: interpretar, ALVOS: ALVOS, normal: normal };
+});
+
+</script>
+<script>
+/*
  * Caroá Maps — a FICHA DE CAMPO na tela (1.2): o painel da ficha do lote
  * (montado do modelo), o CSV dos pontos, o croqui, o levantamento no mapa e o
  * PDF. Tudo fica no celular (IndexedDB 'fichas'), num registro por lote, já no
@@ -3461,7 +3753,8 @@ window.LOGO_CAROA = { dados: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD
         lat_lote: item.lat, lon_lote: item.lon, criado_em: agora.toISOString(), atualizado_em: agora.toISOString(),
         por: C.E.nome || '', numero_reservado: numero,
         dados: F.dadosIniciais(item, { numeroFicha: numero, tecnico: C.E.nome, auxiliar: r[1] || '', agora: agora }),
-        auto: {}, levantamento: null,
+        // 1.7: a rua que veio no pacote (das guias do cadastro) entra como automática
+        auto: item.rua ? { logradouro: true } : {}, levantamento: null,
       };
     });
   }
@@ -3477,6 +3770,8 @@ window.LOGO_CAROA = { dados: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD
     }
     return p.then(function () {
       if (window.Nuvem) Nuvem.fichaMudou(ficha);
+      // 1.7: a "anterior" do "Igual à anterior" é a última que ESTE celular gravou
+      C.gravarPref('ultima_ficha', ficha.chave);
       if (aberta && aberta.ficha === ficha) aberta.gravada = true;
       if (C.E.selecionado && C.E.selecionado.chave === ficha.chave) atualizarBotaoDoCartao(C.E.selecionado);
       // 1.6: o lote muda de cor na hora (ex.: "agendar retorno" = vermelho)
@@ -3630,6 +3925,114 @@ window.LOGO_CAROA = { dados: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD
       desenharLevantamentoNoPainel();
       C.abrirPainel('p-ficha');
       $('f-corpo').scrollTop = 0;
+      return mostrarAnterior();
+    });
+  }
+
+  // ================================================================ 1.7: igual à anterior
+  var NOMES_DOS_COPIADOS = { logradouro: 'rua', bairro: 'bairro', cep: 'CEP', distrito: 'distrito' };
+  /* o botão aparece quando a última ficha deste celular tem algo para copiar
+     para os campos vazios da aberta */
+  function mostrarAnterior() {
+    var bt = $('f-anterior');
+    bt.hidden = true;
+    aberta.anterior = null;
+    return C.lerPref('ultima_ficha').then(function (chave) {
+      var anterior = chave && chave !== aberta.ficha.chave ? fichas.get(chave) : null;
+      if (!anterior) return;
+      var teste = JSON.parse(JSON.stringify(aberta.ficha.dados));
+      if (!F.copiarDaAnterior(teste, anterior.dados).length) return;
+      aberta.anterior = anterior;
+      bt.textContent = '↺ Igual à anterior (ficha nº ' + (anterior.dados.numero_ficha || '–') + ')';
+      bt.hidden = false;
+    });
+  }
+
+  function copiarAnterior() {
+    if (!aberta || !aberta.anterior) return;
+    var f = aberta.ficha, anterior = aberta.anterior;
+    var copiados = F.copiarDaAnterior(f.dados, anterior.dados);
+    copiados.forEach(function (id) { delete f.auto[id]; });
+    $('f-anterior').hidden = true;
+    if (!copiados.length) return;
+    var nomes = [];
+    copiados.forEach(function (id) {
+      var n = NOMES_DOS_COPIADOS[id] || 'terreno';
+      if (nomes.indexOf(n) < 0) nomes.push(n);
+    });
+    preencherCampos();
+    desenharCroqui();
+    gravarDepois(f);
+    C.aviso('Copiado da ficha nº ' + (anterior.dados.numero_ficha || '–') + ': ' + nomes.join(', ') + '. Confira o que mudou.', 5000);
+  }
+
+  // ================================================================ 1.7: a ficha falada
+  var ERROS_DA_VOZ = {
+    'sem-reconhecedor': 'Este celular não tem o reconhecimento de voz do Google.',
+    'not-allowed': 'Sem permissão para usar o microfone.', 'service-not-allowed': 'Sem permissão para usar o microfone.',
+    'no-speech': 'Não ouvi nada. Toque em 🎤 Falar e fale perto do celular.',
+    'network': 'Sem internet: neste aparelho a voz precisa de sinal.',
+    'audio-capture': 'O microfone não respondeu.',
+  };
+  function ouvir() {
+    if (!aberta) return;
+    var ponte = window.CaroaMapsAndroid;
+    if (ponte && ponte.ouvir) { $('f-falar').classList.add('ouvindo'); ponte.ouvir(); return; }
+    var Reconhecedor = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!Reconhecedor) { C.aviso('Este aparelho não reconhece voz.'); return; }
+    var rec = new Reconhecedor();
+    rec.lang = 'pt-BR';
+    rec.interimResults = false;
+    rec.maxAlternatives = 1;
+    var respondeu = false;
+    rec.onresult = function (ev) { respondeu = true; ouvido(ev.results[0][0].transcript, null); };
+    rec.onerror = function (ev) { respondeu = true; ouvido(null, ev.error); };
+    rec.onend = function () { $('f-falar').classList.remove('ouvindo'); if (!respondeu) ouvido(null, 'no-speech'); };
+    $('f-falar').classList.add('ouvindo');
+    try { rec.start(); } catch (e) { $('f-falar').classList.remove('ouvindo'); C.aviso('A voz não começou: ' + e.message); }
+  }
+
+  /* o que o reconhecedor (do Google no APK, ou do navegador) devolveu */
+  function ouvido(texto, erro) {
+    $('f-falar').classList.remove('ouvindo');
+    if (!texto) {
+      if (erro && erro !== 'cancelado' && erro !== 'aborted') C.aviso(ERROS_DA_VOZ[erro] || 'Não entendi a fala.', 6000);
+      return;
+    }
+    if (!aberta || $('p-ficha').hidden) return;
+    var f = aberta.ficha;
+    var r = window.Voz.interpretar(texto, MODELO);
+    var antes = {};
+    Object.keys(r.dados).forEach(function (id) {
+      antes[id] = f.dados[id] === undefined ? undefined : JSON.parse(JSON.stringify(f.dados[id]));
+      var valor = r.dados[id];
+      if (Array.isArray(valor)) {
+        var lista = Array.isArray(f.dados[id]) ? f.dados[id].slice() : [];
+        valor.forEach(function (v) { if (lista.indexOf(v) < 0) lista.push(v); });
+        valor = lista;
+      }
+      mudou(id, valor, true);
+    });
+    if (r.observacao) {
+      antes.observacoes = f.dados.observacoes;
+      mudou('observacoes', (f.dados.observacoes ? f.dados.observacoes + ' | ' : '') + r.observacao, true);
+    }
+    preencherCampos();
+    var nada = !r.entendidos.length && !r.observacao;
+    var linhas = ['Você disse: “' + texto + '”'];
+    if (r.entendidos.length) linhas.push('', r.entendidos.map(function (e) { return '✓ ' + e; }).join('\n'));
+    if (r.observacao) linhas.push('', '✓ Observação: ' + r.observacao);
+    if (r.naoEntendidos.length) linhas.push('', 'Não entendi: ' + r.naoEntendidos.join(', '));
+    if (nada) linhas.push('', 'Fale as opções da ficha, por exemplo: "casa de alvenaria, residencial, dois pavimentos, conservação boa".');
+    C.dialogo({
+      titulo: nada ? 'Não entendi' : 'Entendi', texto: linhas.join('\n'),
+      botoes: nada ? [{ rotulo: 'OK', valor: true, classe: 'bt-ok' }]
+        : [{ rotulo: 'Desfazer', valor: 'desfazer' }, { rotulo: 'OK', valor: true, classe: 'bt-ok' }],
+    }).then(function (escolha) {
+      if (escolha !== 'desfazer' || !aberta || aberta.ficha !== f) return;
+      Object.keys(antes).forEach(function (id) { mudou(id, antes[id] === undefined ? '' : antes[id], true); });
+      preencherCampos();
+      C.aviso('Desfeito: a ficha voltou ao que era antes da fala.');
     });
   }
 
@@ -3704,6 +4107,9 @@ window.LOGO_CAROA = { dados: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD
         });
       }
     });
+    // 1.7: igual à anterior e a ficha falada
+    $('f-anterior').onclick = copiarAnterior;
+    $('f-falar').onclick = ouvir;
     $('f-apagar').onclick = function () {
       var f = aberta && aberta.ficha;
       if (f && window.Escritorio) Escritorio.apagarFicha(f);
@@ -4041,6 +4447,8 @@ window.LOGO_CAROA = { dados: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD
   function iniciar(contexto) {
     C = contexto;
     ligarEventos();
+    // 1.7: o APK devolve aqui o que o reconhecedor de voz do Google ouviu
+    window.vozOuvida = function (texto, erro) { ouvido(texto, erro); };
     $('p-ficha').querySelector('.voltar').onclick = function () {
       clearTimeout(tempoGravar);
       if (aberta && (aberta.gravada || fichas.has(aberta.ficha.chave))) gravarJa(aberta.ficha);
@@ -4536,6 +4944,7 @@ window.LOGO_CAROA = { dados: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD
     $('n-estado').textContent = linhas.join('\n');
     $('n-estado').classList.toggle('erro', !!e.erro);
     $('n-escritorio').hidden = papel !== 'analista';
+    if (window.Equipe) Equipe.desenharConta();
   }
 
   function mostrarErroLogin(t) {
@@ -4638,6 +5047,11 @@ window.LOGO_CAROA = { dados: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD
   }
 
   function sair() {
+    // 1.7: a posição sai do mapa da equipe antes (com a sessão ainda aberta)
+    var antes = window.Equipe ? Equipe.aoSair() : Promise.resolve();
+    return antes.catch(function () { /* sem sinal: some sozinha em 2 h */ }).then(sairDeVez);
+  }
+  function sairDeVez() {
     motor.desligar();
     if (relogioLiberacao) { clearInterval(relogioLiberacao); relogioLiberacao = null; }
     aguardando = false;
@@ -4707,6 +5121,32 @@ window.LOGO_CAROA = { dados: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD
     if (tipo === 'bloqueado') return 'Só analista apaga ou restaura ficha.';
     if (tipo === 'rede') return 'Sem internet: para apagar, conecte e tente de novo.';
     return 'Não deu certo: ' + ((e && e.message) || e);
+  }
+
+  // ================================================================ 1.7: colegas no mapa (04_posicoes.sql)
+  /* a posição de quem está logado (uma linha por pessoa; o servidor carimba a hora) */
+  function enviarPosicao(p) {
+    if (!cliente || !sessao) return Promise.reject(erroNormal({ message: 'sem login' }, 401));
+    var linha = { user_id: sessao.user.id, nome: p.nome || null, lat: p.lat, lon: p.lon,
+      precisao: p.precisao == null ? null : Math.round(p.precisao) };
+    return cliente.from('posicoes').upsert([linha], { onConflict: 'user_id' }).then(function (r) {
+      if (r.error) throw erroNormal(r.error, r.status);
+    });
+  }
+  /* "Encerrar o dia": a posição sai do mapa da equipe */
+  function apagarPosicao() {
+    if (!cliente || !sessao) return Promise.resolve();
+    return cliente.from('posicoes').delete().eq('user_id', sessao.user.id).then(function (r) {
+      if (r.error) throw erroNormal(r.error, r.status);
+    });
+  }
+  /* quem está em campo agora (as posições das últimas 2 h) */
+  function lerEquipe() {
+    if (!cliente || !sessao) return Promise.resolve([]);
+    return cliente.rpc('equipe_agora').then(function (r) {
+      if (r.error) throw erroNormal(r.error, r.status);
+      return Array.isArray(r.data) ? r.data : [];
+    });
   }
 
   /* depois de uma mudança, envia em 2 s (junta várias mudanças seguidas) */
@@ -4796,6 +5236,7 @@ window.LOGO_CAROA = { dados: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD
     iniciar: iniciar, entrar: entrar, sair: sair, cicloAgora: cicloAgora, emailDoUsuario: emailDoUsuario,
     listarEquipe: listarEquipe, liberar: liberar, aguardando: function () { return aguardando; },
     apagarFicha: apagarFicha, restaurarFicha: restaurarFicha, listarApagadas: listarApagadas, erroDoApagar: erroDoApagar,
+    enviarPosicao: enviarPosicao, apagarPosicao: apagarPosicao, lerEquipe: lerEquipe,
     fichaMudou: fichaMudou, marcaMudou: marcaMudou, conferencia: conferencia, arquivo: arquivo, urlDoArquivo: urlDoArquivo,
     papel: function () { return papel; }, logado: function () { return !!sessao; },
     usuario: function () { return sessao ? sessao.user : null; },
@@ -5105,6 +5546,8 @@ window.LOGO_CAROA = { dados: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD
     C.abrirPainel('p-escritorio');
     if ($('e-situacao').value === 'apagadas') carregarLixeira();
     carregarEquipe();
+    // 1.7: quem está em campo agora
+    if (window.Equipe) Equipe.atualizarAgora();
     pararEquipe();
     relogioEquipe = setInterval(function () {
       if ($('p-escritorio').hidden) { pararEquipe(); return; }
@@ -5131,6 +5574,205 @@ window.LOGO_CAROA = { dados: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD
 </script>
 <script>
 /*
+ * Caroá Maps — COLEGAS NO MAPA (1.7). Quem aperta "▶ Começar o dia" (☁ ›
+ * Conta) mostra à equipe onde está AGORA: uma posição por pessoa, mandada a
+ * cada 30 s só com o app aberto e na frente; "■ Encerrar o dia" apaga. No
+ * mapa, um ponto roxo com o nome e "há N min" para cada colega (apagado
+ * depois de 10 min; o servidor nem manda o de mais de 2 h). O analista também
+ * vê a lista "👥 Equipe agora" no Escritório, com "📍 Ver no mapa".
+ * A jornada vale só no dia em que começou: quem esqueceu de encerrar não
+ * continua aparecendo no dia seguinte. Servidor: supabase/04_posicoes.sql.
+ */
+(function () {
+  'use strict';
+  var INTERVALO_MS = 30000, VELHO_MIN = 10;
+  var C = null, camada = null, relogio = null;
+  var jornada = null;            // 'AAAA-MM-DD' do dia em que começou (pref 'jornada')
+  var lista = [], ultimoEnvio = null, semTabela = false, avisouSemTabela = false, rodando = false;
+
+  function $(id) { return document.getElementById(id); }
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function hoje() { return C.N.dataLocal(new Date()); }
+  function ativa() { return !!jornada && jornada === hoje(); }
+  function liberado() { return !!(window.Nuvem && Nuvem.logado() && !Nuvem.aguardando()); }
+  function minutosDesde(iso) {
+    var t = Date.parse(iso);
+    return isNaN(t) ? null : Math.max(0, Math.round((Date.now() - t) / 60000));
+  }
+  function idade(min) {
+    if (min == null) return '';
+    if (min < 1) return 'agora';
+    if (min < 60) return 'há ' + min + ' min';
+    return 'há ' + Math.floor(min / 60) + ' h ' + (min % 60 < 10 ? '0' : '') + (min % 60);
+  }
+  function primeiroNome(n) { return String(n || 'Colega').trim().split(/\s+/)[0]; }
+
+  /* PGRST205 (tabela), PGRST202 (função), 42P01: o 04 não foi colado */
+  function semO04(e) { return /^(PGRST205|PGRST202|42P01|PGRST106)$/.test(String((e && e.codigo) || '')); }
+  function tratarErro(e) {
+    if (!semO04(e)) return;     // sem sinal e o resto: tenta de novo no próximo ciclo
+    semTabela = true;
+    if (ativa() && !avisouSemTabela) {
+      avisouSemTabela = true;
+      C.aviso('Falta colar o 04_posicoes.sql no Supabase: a sua posição ainda não aparece para a equipe.', 7000);
+    }
+    desenharConta();
+    desenharEscritorio();
+  }
+
+  // ================================================================ a tela Conta
+  function desenharConta() {
+    var caixa = $('n-jornada-caixa');
+    if (!caixa || !C) return;
+    caixa.hidden = !liberado();
+    var bt = $('n-jornada'), txt = $('n-jornada-txt');
+    if (ativa()) {
+      bt.textContent = '■ Encerrar o dia';
+      bt.className = 'bt bt-grande bt-perigo';
+      txt.textContent = semTabela ? 'Falta colar o 04_posicoes.sql no Supabase: a sua posição ainda não aparece para a equipe.'
+        : 'A equipe vê onde você está enquanto o app estiver aberto' +
+          (ultimoEnvio ? ' (última posição às ' + C.N.horaLocal(ultimoEnvio) + ').' : C.gpsRecente() ? '.' : '. Esperando o GPS…');
+    } else {
+      bt.textContent = '▶ Começar o dia';
+      bt.className = 'bt bt-grande bt-ok';
+      txt.textContent = 'Começando o dia, técnicos e analistas veem no mapa onde você está (só com o app aberto). ' +
+        'Encerrar o dia apaga a sua posição.';
+    }
+  }
+
+  function comecar() {
+    jornada = hoje();
+    ultimoEnvio = null;
+    C.gravarPref('jornada', jornada);
+    desenharConta();
+    C.aviso('Dia começado: a equipe vê onde você está enquanto o app estiver aberto.', 5000);
+    return ciclo();
+  }
+
+  function encerrar() {
+    jornada = null;
+    ultimoEnvio = null;
+    C.gravarPref('jornada', null);
+    desenharConta();
+    if (!liberado()) return Promise.resolve();
+    return Nuvem.apagarPosicao().then(function () {
+      C.aviso('Dia encerrado: a sua posição saiu do mapa da equipe.', 5000);
+    }, function (e) {
+      if (semO04(e)) return;
+      C.aviso('Dia encerrado. Sem sinal agora: a sua última posição some do mapa da equipe em até 2 horas.', 7000);
+    });
+  }
+
+  /* ao sair da conta: a posição sai antes (com a sessão ainda aberta) */
+  function aoSair() {
+    var tinha = ativa();
+    jornada = null;
+    lista = [];
+    if (C) { C.gravarPref('jornada', null); desenhar(); }
+    return tinha && liberado() ? Nuvem.apagarPosicao() : Promise.resolve();
+  }
+
+  // ================================================================ a cada 30 s
+  function ciclo() {
+    if (rodando || !C || !liberado() || document.visibilityState !== 'visible') return Promise.resolve();
+    rodando = true;
+    var envio = Promise.resolve();
+    if (ativa() && !semTabela) {
+      var g = C.gpsRecente();
+      if (g) {
+        envio = Nuvem.enviarPosicao({ lat: g.lat, lon: g.lon, precisao: g.precisao, nome: C.E.nome || '' }).then(function () {
+          ultimoEnvio = new Date().toISOString();
+          if (!$('p-conta').hidden) desenharConta();
+        }, tratarErro);
+      }
+    }
+    return envio.then(function () {
+      if (semTabela) return null;
+      return Nuvem.lerEquipe().then(function (l) { lista = l; desenhar(); }, tratarErro);
+    }).then(function () { rodando = false; }, function () { rodando = false; });
+  }
+
+  // ================================================================ o mapa e o Escritório
+  function desenhar() {
+    if (!camada) return;
+    camada.clearLayers();
+    var eu = window.Nuvem && Nuvem.usuario() ? Nuvem.usuario().id : null;
+    lista.forEach(function (p) {
+      if (p.user_id === eu || p.lat == null || p.lon == null) return;
+      var min = minutosDesde(p.em);
+      var icone = L.divIcon({
+        className: 'colega' + (min != null && min > VELHO_MIN ? ' velho' : ''),
+        html: '<i></i><b>' + esc(primeiroNome(p.nome)) + '</b><span>' + esc(idade(min)) + '</span>',
+        iconSize: [16, 16], iconAnchor: [8, 8],
+      });
+      var m = L.marker([p.lat, p.lon], { icon: icone, keyboard: false, zIndexOffset: 500 });
+      m.on('click', function () {
+        C.aviso((p.nome || 'Colega') + (p.papel === 'analista' ? ' (analista)' : '') + ' · ' + idade(min) +
+          (p.precisao ? ' · GPS ±' + p.precisao + ' m' : ''), 5000);
+      });
+      camada.addLayer(m);
+    });
+    desenharEscritorio();
+  }
+
+  function desenharEscritorio() {
+    var caixa = $('e-equipe-agora');
+    if (!caixa || !C) return;
+    if (!window.Nuvem || Nuvem.papel() !== 'analista') { caixa.hidden = true; return; }
+    caixa.hidden = false;
+    if (semTabela) {
+      caixa.innerHTML = '<h3>👥 Equipe agora</h3><p class="dica">Falta colar o 04_posicoes.sql no Supabase.</p>';
+      return;
+    }
+    caixa.innerHTML = '<h3>👥 Equipe agora (' + lista.length + ')</h3>' + (lista.length ? lista.map(function (p) {
+      var min = minutosDesde(p.em);
+      return '<div class="pessoa' + (min != null && min > VELHO_MIN ? ' velho' : '') + '"><span><b>' + esc(p.nome || '(sem nome)') + '</b>' +
+        esc((p.papel === 'analista' ? 'analista · ' : '') + idade(min) + (p.precisao ? ' · GPS ±' + p.precisao + ' m' : '')) + '</span>' +
+        '<button type="button" class="bt" data-ver="' + esc(p.user_id) + '">📍 Ver no mapa</button></div>';
+    }).join('') : '<p class="dica">Ninguém começou o dia, ou ninguém está com o app aberto agora.</p>');
+  }
+
+  function verNoMapa(userId) {
+    var p = lista.find(function (x) { return x.user_id === userId; });
+    if (!p) return;
+    C.fecharPaineis();
+    C.mapa.flyTo([p.lat, p.lon], Math.max(C.mapa.getZoom(), 18), { duration: 0.8 });
+  }
+
+  // ================================================================ início
+  function iniciar(contexto) {
+    C = contexto;
+    camada = L.layerGroup().addTo(C.mapa);
+    $('n-jornada').onclick = function () { (ativa() ? encerrar : comecar)(); };
+    $('e-equipe-agora').addEventListener('click', function (ev) {
+      var b = ev.target.closest('button[data-ver]');
+      if (b) verNoMapa(b.getAttribute('data-ver'));
+    });
+    document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') ciclo(); });
+    relogio = setInterval(ciclo, INTERVALO_MS);
+    return C.lerPref('jornada').then(function (j) {
+      jornada = j || null;
+      if (jornada && !ativa()) { jornada = null; C.gravarPref('jornada', null); }   // a de ontem não continua
+      desenharConta();
+      // o login pode estar abrindo ainda: a primeira volta sai logo depois
+      setTimeout(ciclo, 2500);
+    });
+  }
+
+  window.Equipe = {
+    iniciar: iniciar, desenharConta: desenharConta, aoSair: aoSair, ciclo: ciclo,
+    atualizarAgora: function () { desenharEscritorio(); return ciclo(); },
+    ativa: function () { return ativa(); },
+  };
+})();
+
+</script>
+<script>
+/*
  * Caroá Maps — a tela de campo. Usa o Nucleo (nucleo.js), o Leaflet e o jsPDF.
  * Dentro do APK há a ponte window.CaroaMapsAndroid; no navegador (e no
  * iPhone, pela tela de início, 1.1) o mesmo HTML funciona sem ela: o
@@ -5138,7 +5780,7 @@ window.LOGO_CAROA = { dados: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD
  */
 (function () {
   'use strict';
-  var VERSAO_APP = '1.6';
+  var VERSAO_APP = '1.7';
   var N = window.Nucleo;
   var ANDROID = window.CaroaMapsAndroid || null;
   // iPadOS se diz "Macintosh", mas tem toque
@@ -6618,6 +7260,8 @@ window.LOGO_CAROA = { dados: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD
       aplicarMarcas: aplicarMarcas, aplicarConferencias: aplicarConferencias, aplicarArquivos: aplicarArquivos,
       selecionar: selecionar, entregarArquivo: entregarArquivo, abrirLink: abrirLink, mostrarProgresso: mostrarProgresso,
       esconderProgresso: esconderProgresso, mostrarCartao: mostrarCartao,
+      // 1.7: os colegas no mapa
+      mapa: mapa, gpsRecente: gpsRecente,
     };
   }
 
@@ -6660,6 +7304,7 @@ window.LOGO_CAROA = { dados: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD
         var ctx = contextoDaNuvem();
         Nuvem.iniciar(ctx).catch(function (e) { aviso('A nuvem não iniciou: ' + e.message, 6000); });
         if (window.Escritorio) Escritorio.iniciar(ctx);
+        if (window.Equipe) Equipe.iniciar(ctx).catch(function () { /* sem a memória do app: segue sem os colegas */ });
       }
     });
   }
