@@ -958,8 +958,14 @@ input, textarea { font: inherit; -webkit-user-select: text; user-select: text; }
 .nuvem.pend { background: #e3a400; color: #1a1300; }
 .nuvem.erro { background: #e53935; }
 .nuvem.fora { background: rgba(255,255,255,.16); }
-.num.retorno { box-shadow: 0 0 0 4px #e53935; }
-.c-retorno { margin-top: 8px; background: #fde8e7; color: #9b1c17; border-radius: 10px; padding: 8px 10px; font-weight: 700; }
+/* 1.6: precisa voltar ao lote ("agendar retorno" na ficha ou "Retorno a campo" do escritório): vermelho vence o verde */
+.num.voltar { background: #e53935; color: #fff; border-color: #fff; }
+.num-grande.voltar { background: #e53935; color: #fff; border-color: #b71c1c; }
+.lista li .num-p.voltar { background: #e53935; color: #fff; border-color: #b71c1c; }
+.c-retorno { margin-top: 8px; background: #fde8e7; color: #9b1c17; border-radius: 10px; padding: 8px 10px; font-weight: 700; white-space: pre-line; }
+/* 1.6: apagar ficha (analista) e a lixeira do Escritório */
+.f-apagar { display: block; margin: 6px auto 0; color: #c62828; }
+.e-lista li [data-restaurar] { flex: none; min-height: 40px; font-size: 14px; padding: 0 12px; }
 .n-erro { margin: 10px 0 0; background: #fde8e7; color: #9b1c17; border-radius: 10px; padding: 9px 11px; font-weight: 700; }
 .n-quem { display: flex; flex-direction: column; gap: 2px; background: var(--branco); border-radius: 12px; padding: 12px; }
 .n-quem span { color: var(--texto-suave); font-size: 14px; font-weight: 700; }
@@ -1061,6 +1067,7 @@ input, textarea { font: inherit; -webkit-user-select: text; user-select: text; }
     <button type="button" data-f="faltam">Faltam</button>
     <button type="button" data-f="feitos">Conferidos</button>
     <button type="button" data-f="todos">Todos</button>
+    <button type="button" data-f="voltar">Voltar</button>
     <button type="button" data-o="perto" class="ordem">Mais perto</button>
   </div>
   <ol id="l-itens" class="lista"></ol>
@@ -1122,7 +1129,8 @@ input, textarea { font: inherit; -webkit-user-select: text; user-select: text; }
       <option value="todas">Todas</option>
       <option value="falta">Falta conferir</option>
       <option value="conferidas">Conferidas</option>
-      <option value="retorno">Retorno a campo</option>
+      <option value="retorno">Voltar a campo</option>
+      <option value="apagadas">🗑 Apagadas (lixeira)</option>
     </select>
   </div>
   <div class="p-corpo e-corpo">
@@ -1135,7 +1143,8 @@ input, textarea { font: inherit; -webkit-user-select: text; user-select: text; }
 <section id="p-ficha" class="painel" hidden>
   <header class="p-cab"><button class="voltar" type="button" aria-label="Voltar">←</button><h2 id="f-titulo">Ficha de campo</h2><span id="f-andamento" class="f-andamento"></span></header>
   <div class="p-corpo f-corpo" id="f-corpo"></div>
-  <div class="f-rodape"><button id="f-pdf" class="bt bt-grande bt-ok" type="button">📄 PDF da ficha (enviar)</button></div>
+  <div class="f-rodape"><button id="f-pdf" class="bt bt-grande bt-ok" type="button">📄 PDF da ficha (enviar)</button>
+    <button id="f-apagar" class="bt-link f-apagar" type="button" hidden>🗑 Apagar esta ficha</button></div>
 </section>
 
 <div id="progresso" class="progresso" hidden>
@@ -2834,10 +2843,31 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     return 'FICHA_' + num + '_LOTE_' + limpo(lote) + '.pdf';
   }
 
+  // ------------------------------------------------------------------ 1.6: voltar e o dia da ficha
+  /* o técnico precisa voltar ao lote: o resultado da visita é "agendar retorno"
+     (imóvel fechado ou sem ninguém para informar) */
+  function precisaVoltar(dados) {
+    var r = dados && dados.resultado;
+    return (Array.isArray(r) ? r : [r]).some(function (v) { return /agendar retorno/i.test(String(v == null ? '' : v)); });
+  }
+
+  /* o dia da visita (AAAA-MM-DD): a Data da ficha (dd/mm/aaaa); sem ela, o
+     dia, no relógio daqui, da última gravação (que numa ficha vinda do
+     servidor é a hora em que ela sincronizou: por isso a Data vem antes) */
+  function diaDaFicha(ficha) {
+    var d = String((ficha && ficha.dados && ficha.dados.data) || '').trim();
+    var m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(d);
+    if (m) return m[3] + '-' + n2(+m[2]) + '-' + n2(+m[1]);
+    var quando = ficha && ficha.atualizado_em ? new Date(ficha.atualizado_em) : null;
+    if (!quando || isNaN(quando.getTime())) return '';
+    return quando.getFullYear() + '-' + n2(quando.getMonth() + 1) + '-' + n2(quando.getDate());
+  }
+
   return {
     PALMEIRA: PALMEIRA, numero: numero, formatar: formatar, areaConstruidaTotal: areaConstruidaTotal,
     andamento: andamento, preencherDoLevantamento: preencherDoLevantamento, dadosIniciais: dadosIniciais,
     nomeDoArquivo: nomeDoArquivo, idsDaLinha: idsDaLinha, preenchido: preenchido,
+    precisaVoltar: precisaVoltar, diaDaFicha: diaDaFicha,
   };
 });
 
@@ -3449,11 +3479,38 @@ window.LOGO_CAROA = { dados: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD
       if (window.Nuvem) Nuvem.fichaMudou(ficha);
       if (aberta && aberta.ficha === ficha) aberta.gravada = true;
       if (C.E.selecionado && C.E.selecionado.chave === ficha.chave) atualizarBotaoDoCartao(C.E.selecionado);
+      // 1.6: o lote muda de cor na hora (ex.: "agendar retorno" = vermelho)
+      if (C.redesenharChaves) C.redesenharChaves([ficha.chave]);
     }).catch(function (e) { C.aviso('Não gravei a ficha: ' + e.message, 6000); });
   }
   function gravarDepois(ficha) {
     clearTimeout(tempoGravar);
     tempoGravar = setTimeout(function () { gravarJa(ficha); }, 400);
+  }
+
+  /* 1.6: a ficha do lote que manda voltar ("agendar retorno"), ou null */
+  function fichaQueVolta(item) {
+    var f = fichaDe(item);
+    return f && F.precisaVoltar(f.dados) ? f : null;
+  }
+
+  /* 1.6: a ficha sai deste aparelho (a coordenação apagou): da memória, do
+     IndexedDB e do mapa. Aberta na tela: a gravação pendente é cancelada (não
+     recria a ficha) e a tela fecha com aviso. Devolve se a ficha estava aqui. */
+  function tirar(chave) {
+    var tinha = fichas.has(chave);
+    if (aberta && aberta.ficha.chave === chave) {
+      clearTimeout(tempoGravar);
+      var naTela = !$('p-ficha').hidden;
+      aberta = null;
+      if (naTela) { C.fecharPaineis(); C.aviso('Esta ficha foi apagada pela coordenação.', 6000); }
+    }
+    fichas.delete(chave);
+    return C.apagarChave('fichas', chave).then(function () {
+      desenharNoMapa();
+      if (C.redesenharChaves) C.redesenharChaves([chave]);
+      return tinha;
+    });
   }
 
   // ================================================================ o cartão do lote
@@ -3567,6 +3624,8 @@ window.LOGO_CAROA = { dados: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD
       montarPainel();
       $('f-titulo').textContent = 'Ficha · ' + (item.numero ? 'Lote ' + C.N.numeroParaMostrar(item.numero) : (item.nome || 'lote ' + item.n));
       if (C.IOS) $('f-csv').removeAttribute('accept');
+      // 1.6: só o analista apaga, e só ficha que já existe
+      $('f-apagar').hidden = !(existente && window.Nuvem && Nuvem.papel() === 'analista');
       preencherCampos();
       desenharLevantamentoNoPainel();
       C.abrirPainel('p-ficha');
@@ -3645,6 +3704,10 @@ window.LOGO_CAROA = { dados: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD
         });
       }
     });
+    $('f-apagar').onclick = function () {
+      var f = aberta && aberta.ficha;
+      if (f && window.Escritorio) Escritorio.apagarFicha(f);
+    };
     $('f-pdf').onclick = function () {
       var f = aberta && aberta.ficha;
       if (!f) return;
@@ -3905,11 +3968,14 @@ window.LOGO_CAROA = { dados: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD
     });
   }
 
+  /* as fichas do dia: a Data da ficha é o dia (1.6: antes valia a hora da
+     última gravação, e uma ficha de ontem que sincronizou hoje entrava hoje),
+     mais as fichas dos lotes conferidos no dia */
   function fichasDoDia(dia, marcasDoDia) {
     var chaves = new Set(marcasDoDia.map(function (m) { return m.chave; }));
     var lista = [];
     fichas.forEach(function (f) {
-      if (chaves.has(f.chave) || C.N.dataLocal(f.atualizado_em) === dia) lista.push(f);
+      if (chaves.has(f.chave) || F.diaDaFicha(f) === dia) lista.push(f);
     });
     return lista.sort(function (a, b) { return (+a.dados.numero_ficha || 0) - (+b.dados.numero_ficha || 0) || String(a.criado_em).localeCompare(String(b.criado_em)); });
   }
@@ -3934,24 +4000,34 @@ window.LOGO_CAROA = { dados: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD
   }
 
   /* as fichas que chegaram de outros aparelhos (a nuvem já pulou as que têm
-     mudança local pendente) */
+     mudança local pendente); 1.6: a que chega apagada sai daqui */
   function aplicarRemotas(lista) {
     if (!lista.length) return Promise.resolve();
-    lista.forEach(function (f) {
-      var local = fichas.get(f.chave);
-      if (local && local.numero_reservado) f.numero_reservado = local.numero_reservado;
-      fichas.set(f.chave, f);
-      if (aberta && aberta.ficha.chave === f.chave && !$('p-ficha').hidden) {
-        aberta.ficha = f;
-        aberta.gravada = true;
-        aberta.lev = montarLev(f, aberta.item);
-        preencherCampos();
-        desenharLevantamentoNoPainel();
-      }
-    });
-    return lista.reduce(function (p, f) { return p.then(function () { return C.gravar('fichas', f); }); }, Promise.resolve()).then(function () {
+    var apagadas = lista.filter(function (f) { return f.apagada; });
+    var vivas = lista.filter(function (f) { return !f.apagada; });
+    var tiradas = 0;
+    return apagadas.reduce(function (p, f) {
+      return p.then(function () { return tirar(f.chave); }).then(function (tinha) { if (tinha) tiradas++; });
+    }, Promise.resolve()).then(function () {
+      vivas.forEach(function (f) {
+        delete f.apagada;
+        var local = fichas.get(f.chave);
+        if (local && local.numero_reservado) f.numero_reservado = local.numero_reservado;
+        fichas.set(f.chave, f);
+        if (aberta && aberta.ficha.chave === f.chave && !$('p-ficha').hidden) {
+          aberta.ficha = f;
+          aberta.gravada = true;
+          aberta.lev = montarLev(f, aberta.item);
+          preencherCampos();
+          desenharLevantamentoNoPainel();
+        }
+      });
+      return vivas.reduce(function (p, f) { return p.then(function () { return C.gravar('fichas', f); }); }, Promise.resolve());
+    }).then(function () {
       desenharNoMapa();
       if (C.E.selecionado && fichas.has(C.E.selecionado.chave)) atualizarBotaoDoCartao(C.E.selecionado);
+      if (C.redesenharChaves && vivas.length) C.redesenharChaves(vivas.map(function (f) { return f.chave; }));
+      if (tiradas) C.aviso(tiradas === 1 ? 'Uma ficha foi apagada pela coordenação.' : tiradas + ' fichas foram apagadas pela coordenação.', 6000);
     });
   }
 
@@ -3981,7 +4057,7 @@ window.LOGO_CAROA = { dados: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD
     iniciar: iniciar, abrir: abrir, fichaDe: fichaDe, resumo: resumo, atualizarBotaoDoCartao: atualizarBotaoDoCartao,
     importarCsv: importarCsv, loteDosPontos: loteDosPontos, desenharNoMapa: desenharNoMapa, fichasDoDia: fichasDoDia,
     enviarPdf: enviarPdf, pdfDasFichas: pdfDasFichas, voltar: voltar, todas: function () { return Array.from(fichas.values()); },
-    aplicarRemotas: aplicarRemotas, abrirFicha: abrirFicha,
+    aplicarRemotas: aplicarRemotas, abrirFicha: abrirFicha, fichaQueVolta: fichaQueVolta, tirar: tirar,
   };
 })();
 
@@ -4111,7 +4187,10 @@ window.LOGO_CAROA = { dados: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD
       function mandarLote(tabela, itens) {
         return servidor.upsert(tabela, itens.map(function (i) { return i.linha; }), CONFLITO[tabela] || 'chave').then(function (resp) {
           anotarEnviados(tabela, resp);
-          return tirar(itens);
+          // 1.6: o servidor diz que a ficha está apagada (a coordenação apagou
+          // enquanto ela esperava aqui): o envio não a ressuscitou; o app a tira
+          var apagadas = Array.isArray(resp) ? resp.filter(function (l) { return l && l.apagada === true; }) : [];
+          return (apagadas.length ? aplicar(tabela, apagadas) : Promise.resolve()).then(function () { return tirar(itens); });
         }, function (e) {
           var tipo = classificar(e, false);
           if (tipo !== 'recusa') throw new Parar(tipo, e);
@@ -4282,11 +4361,15 @@ window.LOGO_CAROA = { dados: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD
     l.auto = f.auto || {};
     return l;
   }
+  /* a ficha que chegou do servidor; apagada = a coordenação apagou (1.6: o
+     app tira). A linha que sobe (linhaDaFicha) NUNCA leva apagada: assim o
+     envio de um celular não ressuscita a ficha apagada. */
   function fichaDaLinha(l) {
     var f = pegar(l, CAMPOS_FICHA);
     f.dados = l.dados || {};
     f.auto = l.auto || {};
     f.atualizado_em = l.atualizado_em || null;
+    f.apagada = l.apagada === true;
     return f;
   }
   function linhaDaMarca(m, apagada) {
@@ -4355,10 +4438,23 @@ window.LOGO_CAROA = { dados: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD
     return e;
   }
 
+  // 1.6: o servidor ainda sem a coluna "apagada" (o 03_apagar_fichas.sql não foi colado)
+  var semColunaApagada = false;
+
   var servidor = {
-    /* devolve [{<coluna do conflito>, seq}]: o motor ignora o eco do próprio envio */
+    /* devolve [{<coluna do conflito>, seq}]: o motor ignora o eco do próprio envio;
+       nas fichas, também "apagada" (a coordenação apagou: o motor tira daqui) */
     upsert: function (tabela, linhas, conflito) {
-      return cliente.from(tabela).upsert(linhas, { onConflict: conflito }).select(conflito + ',seq').then(function (r) {
+      var comApagada = tabela === 'fichas' && !semColunaApagada;
+      function pedir(colunas) { return cliente.from(tabela).upsert(linhas, { onConflict: conflito }).select(colunas); }
+      return pedir(conflito + ',seq' + (comApagada ? ',apagada' : '')).then(function (r) {
+        // sem a coluna (42703), o PostgREST não grava nada: pede de novo sem ela
+        if (r.error && comApagada && String(r.error.code) === '42703') {
+          semColunaApagada = true;
+          return pedir(conflito + ',seq');
+        }
+        return r;
+      }).then(function (r) {
         if (r.error) throw erroNormal(r.error, r.status);
         return r.data || [];
       });
@@ -4581,6 +4677,38 @@ window.LOGO_CAROA = { dados: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD
     });
   }
 
+  // ================================================================ 1.6: apagar ficha (só analista, com internet)
+  function chamar(nome, args) {
+    if (!cliente || !sessao) return Promise.reject(erroNormal({ message: 'sem login' }, 401));
+    return cliente.rpc(nome, args).then(function (r) {
+      if (r.error) throw erroNormal(r.error, r.status);
+      return r.data;
+    });
+  }
+  /* a ficha vai para a lixeira do servidor (e, se pedir, o ✓ do lote sai) */
+  function apagarFicha(chave, tirarMarca) { return chamar('apagar_ficha', { p_chave: chave, p_tirar_marca: !!tirarMarca }); }
+  function restaurarFicha(chave) { return chamar('restaurar_ficha', { p_chave: chave }); }
+  /* a lixeira: as fichas apagadas, as mais recentes primeiro */
+  function listarApagadas() {
+    if (!cliente || !sessao) return Promise.reject(erroNormal({ message: 'sem login' }, 401));
+    return cliente.from('fichas').select('chave,n,numero,origem,dados,por,apagada_em,apagada_por').eq('apagada', true)
+      .order('apagada_em', { ascending: false }).limit(300).then(function (r) {
+        if (r.error) throw erroNormal(r.error, r.status);
+        return r.data || [];
+      });
+  }
+  /* o erro do apagar/restaurar/lixeira em português, para o aviso */
+  function erroDoApagar(e) {
+    var cod = String((e && e.codigo) || '');
+    if (cod === 'PGRST202' || cod === '42703' || cod === '42883') return 'Falta colar o 03_apagar_fichas.sql no Supabase.';
+    if (cod === 'P0002') return 'Essa ficha ainda não está no servidor.';
+    var tipo = S.classificar(e, false);
+    if (tipo === 'sessao') return 'Entre de novo (☁): a sessão venceu.';
+    if (tipo === 'bloqueado') return 'Só analista apaga ou restaura ficha.';
+    if (tipo === 'rede') return 'Sem internet: para apagar, conecte e tente de novo.';
+    return 'Não deu certo: ' + ((e && e.message) || e);
+  }
+
   /* depois de uma mudança, envia em 2 s (junta várias mudanças seguidas) */
   function enviarLogo() {
     if (!sessao || aguardando) return;
@@ -4667,6 +4795,7 @@ window.LOGO_CAROA = { dados: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD
   window.Nuvem = {
     iniciar: iniciar, entrar: entrar, sair: sair, cicloAgora: cicloAgora, emailDoUsuario: emailDoUsuario,
     listarEquipe: listarEquipe, liberar: liberar, aguardando: function () { return aguardando; },
+    apagarFicha: apagarFicha, restaurarFicha: restaurarFicha, listarApagadas: listarApagadas, erroDoApagar: erroDoApagar,
     fichaMudou: fichaMudou, marcaMudou: marcaMudou, conferencia: conferencia, arquivo: arquivo, urlDoArquivo: urlDoArquivo,
     papel: function () { return papel; }, logado: function () { return !!sessao; },
     usuario: function () { return sessao ? sessao.user : null; },
@@ -4690,6 +4819,8 @@ window.LOGO_CAROA = { dados: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD
   var C = null, aberta = null;
   // 1.4: as contas criadas no primeiro acesso, aguardando a liberação
   var equipe = [], relogioEquipe = null;
+  // 1.6: a lixeira (as fichas apagadas, lidas do servidor; null = ainda não leu)
+  var lixeira = null;
 
   function $(id) { return document.getElementById(id); }
   function esc(s) {
@@ -4702,12 +4833,9 @@ window.LOGO_CAROA = { dados: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD
   function dataBR(iso) { if (!iso) return ''; var p = String(iso).slice(0, 10).split('-'); return p[2] + '/' + p[1] + '/' + p[0]; }
 
   /* o dia da visita: a Data da ficha (dd/mm/aaaa); sem ela, o dia da última gravação */
-  function diaDa(f) {
-    var d = String((f.dados && f.dados.data) || '');
-    var m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(d.trim());
-    if (m) return m[3] + '-' + m[2] + '-' + m[1];
-    return f.atualizado_em ? C.N.dataLocal(f.atualizado_em) : '';
-  }
+  function diaDa(f) { return window.FichaModelo.diaDaFicha(f); }
+  /* 1.6: a ficha manda voltar ao lote ("agendar retorno") */
+  function voltaDaFicha(f) { return window.FichaModelo.precisaVoltar(f.dados); }
   function tecnicoDa(f) { return ((f.dados && f.dados.tecnico) || f.por || '').trim() || '(sem nome)'; }
   function conferenciaDa(f) { return C.E.conferencias.get(f.chave) || null; }
   function arquivosDa(chave) {
@@ -4727,7 +4855,7 @@ window.LOGO_CAROA = { dados: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD
       var c = conferenciaDa(f);
       if (sit === 'falta' && c && c.conferido_por) return false;
       if (sit === 'conferidas' && !(c && c.conferido_por)) return false;
-      if (sit === 'retorno' && !(c && c.retorno_campo)) return false;
+      if (sit === 'retorno' && !(c && c.retorno_campo) && !voltaDaFicha(f)) return false;
       return true;
     }).sort(function (a, b) {
       return diaDa(b).localeCompare(diaDa(a)) || (+a.dados.numero_ficha || 0) - (+b.dados.numero_ficha || 0);
@@ -4758,7 +4886,8 @@ window.LOGO_CAROA = { dados: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD
     var arquivos = arquivosDa(f.chave);
     return '<div class="e-detalhe" data-k="' + esc(f.chave) + '">' +
       '<div class="botoes"><button type="button" class="bt" data-acao="ficha">📝 Abrir a ficha</button>' +
-      '<button type="button" class="bt" data-acao="pdf">📄 PDF da ficha</button></div>' +
+      '<button type="button" class="bt" data-acao="pdf">📄 PDF da ficha</button>' +
+      '<button type="button" class="bt bt-perigo" data-acao="apagar">🗑 Apagar a ficha</button></div>' +
       (arquivos.length ? '<div class="botoes" style="margin-top:8px">' + arquivos.map(function (a) {
         return '<button type="button" class="bt" data-caminho="' + esc(a.caminho) + '">' + esc(rotuloArquivo(a)) + '</button>';
       }).join('') + '</div>' : '<p class="dica">Nenhum arquivo desta ficha subiu ainda.</p>') +
@@ -4774,12 +4903,14 @@ window.LOGO_CAROA = { dados: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD
     if (!C) return;
     desenharTecnicos();
     desenharRelatorios();
+    if ($('e-situacao').value === 'apagadas') { desenharLixeira(); return; }
     var lista = filtradas();
     $('e-total').textContent = String(lista.length);
     $('e-itens').innerHTML = lista.length ? lista.map(function (f) {
       var c = conferenciaDa(f), arqs = arquivosDa(f.chave).length;
       var selos = (f.levantamento ? '<span class="selo">📐 levantado</span>' : '') +
         (c && c.conferido_por ? '<span class="selo ok">✓ ' + esc(c.conferido_por) + (c.lancado_sigweb ? ' · SIGWEB' : '') + '</span>' : '<span class="selo">falta conferir</span>') +
+        (voltaDaFicha(f) ? '<span class="selo volta">↩ agendar retorno</span>' : '') +
         (c && c.retorno_campo ? '<span class="selo volta">↩ retorno a campo</span>' : '') +
         (arqs ? '<span class="selo">📎 ' + arqs + '</span>' : '');
       return '<li data-k="' + esc(f.chave) + '"><span class="num-p' + (c && c.conferido_por ? ' ok' : '') + '">' + esc(f.dados.numero_ficha || '–') + '</span>' +
@@ -4808,6 +4939,85 @@ window.LOGO_CAROA = { dados: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD
     return Nuvem.listarEquipe().then(function (l) { equipe = l; desenharEquipe(); }, function () { /* sem sinal: fica a lista de antes */ });
   }
 
+  // ================================================================ 1.6: apagar e a lixeira
+  function nomeDe(userId) {
+    var p = equipe.find(function (x) { return x.user_id === userId; });
+    return p ? (p.nome || String(p.email || '').split('@')[0]) : '';
+  }
+
+  /* apagar uma ficha (só analista; precisa de internet): some de todos os
+     celulares, do mapa e dos relatórios; fica na lixeira, de onde dá para restaurar */
+  function apagarFicha(f) {
+    if (!window.Nuvem || Nuvem.papel() !== 'analista') { C.aviso('Só analista apaga ficha.'); return Promise.resolve(false); }
+    var num = f.dados.numero_ficha || '–';
+    var botoes = [{ rotulo: 'Cancelar', valor: false }, { rotulo: 'Apagar a ficha', valor: 'ficha', classe: 'bt-perigo' }];
+    if (C.E.marcas.has(f.chave)) botoes.push({ rotulo: 'Apagar a ficha e o ✓', valor: 'tudo', classe: 'bt-perigo' });
+    return C.dialogo({
+      titulo: 'Apagar a ficha nº ' + num + '?',
+      texto: 'Lote ' + (f.dados.id_vetorizacao || f.numero || '–') + ' · ' + tecnicoDa(f) + ' · ' + dataBR(diaDa(f)) + '.\n' +
+        'Ela some de todos os celulares, do mapa e dos relatórios. Fica na lixeira do Escritório (dá para restaurar).',
+      botoes: botoes,
+    }).then(function (escolha) {
+      if (!escolha) return false;
+      C.aviso('Apagando a ficha nº ' + num + '…');
+      return Nuvem.apagarFicha(f.chave, escolha === 'tudo').then(function () {
+        return FichaUI.tirar(f.chave).then(function () {
+          if (escolha === 'tudo') return C.aplicarMarcas([{ chave: f.chave, apagada: true }]);
+        }).then(function () {
+          aberta = null;
+          lixeira = null;
+          desenhar();
+          C.aviso('Ficha nº ' + num + ' apagada. Os outros celulares tiram em até um minuto.', 6000);
+          return true;
+        });
+      }, function (e) {
+        C.aviso(Nuvem.erroDoApagar(e), 7000);
+        return false;
+      });
+    });
+  }
+
+  function carregarLixeira() {
+    $('e-total').textContent = '';
+    $('e-itens').innerHTML = '<li class="vazia">Lendo a lixeira do servidor…</li>';
+    return Nuvem.listarApagadas().then(function (l) {
+      lixeira = l;
+      if ($('e-situacao').value === 'apagadas') desenharLixeira();
+    }, function (e) {
+      $('e-itens').innerHTML = '<li class="vazia">' + esc(Nuvem.erroDoApagar(e)) + '</li>';
+    });
+  }
+
+  function desenharLixeira() {
+    if (!lixeira) return;
+    $('e-total').textContent = String(lixeira.length);
+    $('e-itens').innerHTML = lixeira.length ? lixeira.map(function (f) {
+      var d = f.dados || {};
+      var quando = f.apagada_em ? dataBR(C.N.dataLocal(f.apagada_em)) + ' ' + C.N.horaLocal(f.apagada_em) : '';
+      var quem = nomeDe(f.apagada_por);
+      return '<li data-lixo="' + esc(f.chave) + '"><span class="num-p">' + esc(d.numero_ficha || '–') + '</span>' +
+        '<span class="meio"><span class="t1">Ficha nº ' + esc(d.numero_ficha || '–') + ' · Lote ' + esc(d.id_vetorizacao || f.numero || '–') + '</span>' +
+        '<span class="t2">' + esc((d.tecnico || f.por || '(sem nome)') + ' · ' + dataBR(diaDa(f))) + '</span>' +
+        '<span class="selos"><span class="selo volta">🗑 apagada ' + esc(quando) + (quem ? ' por ' + esc(quem) : '') + '</span></span></span>' +
+        '<button type="button" class="bt" data-restaurar="' + esc(f.chave) + '">↩ Restaurar</button></li>';
+    }).join('') : '<li class="vazia">A lixeira está vazia.</li>';
+  }
+
+  function restaurar(b) {
+    var chave = b.getAttribute('data-restaurar');
+    b.disabled = true;
+    Nuvem.restaurarFicha(chave).then(function () {
+      lixeira = (lixeira || []).filter(function (x) { return x.chave !== chave; });
+      desenharLixeira();
+      C.aviso('Restaurada: volta aos celulares em até um minuto.', 6000);
+      // a sincronia só entrega o que tem mais de 10 s: pergunta de novo depois disso
+      setTimeout(function () { Nuvem.cicloAgora(); }, 11000);
+    }, function (e) {
+      b.disabled = false;
+      C.aviso(Nuvem.erroDoApagar(e), 7000);
+    });
+  }
+
   function abrirArquivo(caminho) {
     C.aviso('Abrindo o arquivo…');
     Nuvem.urlDoArquivo(caminho).then(function (url) { C.abrirLink(url); }, function (e) {
@@ -4834,7 +5044,13 @@ window.LOGO_CAROA = { dados: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD
   }
 
   function ligar() {
-    ['e-dia', 'e-tecnico', 'e-situacao'].forEach(function (id) { $(id).addEventListener('change', function () { aberta = null; desenhar(); }); });
+    ['e-dia', 'e-tecnico', 'e-situacao'].forEach(function (id) {
+      $(id).addEventListener('change', function () {
+        aberta = null;
+        if (id === 'e-situacao' && this.value === 'apagadas') { desenharTecnicos(); desenharRelatorios(); carregarLixeira(); }
+        else desenhar();
+      });
+    });
     $('e-equipe').addEventListener('click', function (ev) {
       var b = ev.target.closest('button[data-liberar]');
       if (!b) return;
@@ -4853,6 +5069,9 @@ window.LOGO_CAROA = { dados: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD
       if (b) abrirArquivo(b.getAttribute('data-caminho'));
     });
     $('e-itens').addEventListener('click', function (ev) {
+      var rb = ev.target.closest('button[data-restaurar]');
+      if (rb) { restaurar(rb); return; }
+      if (ev.target.closest('li[data-lixo]')) return;
       var caixa = ev.target.closest('.e-detalhe');
       if (caixa) {
         var chave = caixa.getAttribute('data-k');
@@ -4866,6 +5085,7 @@ window.LOGO_CAROA = { dados: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD
         else if (b.getAttribute('data-acao') === 'pdf') {
           FichaUI.enviarPdf([f], window.FichaModelo.nomeDoArquivo(f), 'Ficha de campo nº ' + (f.dados.numero_ficha || ''), null, { semNuvem: true });
         } else if (b.getAttribute('data-acao') === 'salvar') salvar(chave, caixa);
+        else if (b.getAttribute('data-acao') === 'apagar') apagarFicha(f);
         return;
       }
       var li = ev.target.closest('li[data-k]');
@@ -4883,6 +5103,7 @@ window.LOGO_CAROA = { dados: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD
     aberta = null;
     desenhar();
     C.abrirPainel('p-escritorio');
+    if ($('e-situacao').value === 'apagadas') carregarLixeira();
     carregarEquipe();
     pararEquipe();
     relogioEquipe = setInterval(function () {
@@ -4892,10 +5113,17 @@ window.LOGO_CAROA = { dados: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD
   }
   function pararEquipe() { if (relogioEquipe) clearInterval(relogioEquipe); relogioEquipe = null; }
   function fechar() { pararEquipe(); if ($('p-escritorio')) $('p-escritorio').hidden = true; }
-  function atualizar() { if (C && !$('p-escritorio').hidden) desenhar(); }
+  /* o que chegou de outros celulares redesenha a lista; não enquanto o analista
+     digita na conferência aberta (o redesenho apagaria o que ele escreveu) */
+  function atualizar() {
+    if (!C || $('p-escritorio').hidden) return;
+    var foco = document.activeElement;
+    if (aberta && foco && $('e-itens').contains(foco) && /^(INPUT|TEXTAREA|SELECT)$/.test(foco.tagName)) return;
+    desenhar();
+  }
 
   window.Escritorio = {
-    iniciar: iniciar, abrir: abrir, fechar: fechar, atualizar: atualizar, carregarEquipe: carregarEquipe,
+    iniciar: iniciar, abrir: abrir, fechar: fechar, atualizar: atualizar, carregarEquipe: carregarEquipe, apagarFicha: apagarFicha,
     diaDa: function (f) { return diaDa(f); },
   };
 })();
@@ -4910,7 +5138,7 @@ window.LOGO_CAROA = { dados: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD
  */
 (function () {
   'use strict';
-  var VERSAO_APP = '1.5';
+  var VERSAO_APP = '1.6';
   var N = window.Nucleo;
   var ANDROID = window.CaroaMapsAndroid || null;
   // iPadOS se diz "Macintosh", mas tem toque
@@ -5080,6 +5308,14 @@ window.LOGO_CAROA = { dados: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD
     conferencias: new Map(), arquivos: new Map(),   // do escritório (1.3)
   };
   function retornoDe(item) { var c = E.conferencias.get(item.chave); return c && c.retorno_campo ? c : null; }
+  /* 1.6: o técnico precisa voltar ao lote? A ficha diz "agendar retorno" e/ou
+     o escritório pediu "Retorno a campo". Vermelho no mapa, no cartão e na lista. */
+  var VERMELHO = '#e53935';
+  function voltaDe(item) {
+    var f = window.FichaUI ? FichaUI.fichaQueVolta(item) : null;
+    var c = retornoDe(item);
+    return f || c ? { ficha: f, escritorio: c } : null;
+  }
 
   // ================================================================ mapa
   var mapa = L.map('mapa', {
@@ -5161,19 +5397,22 @@ window.LOGO_CAROA = { dados: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD
   var camadaNumeros = L.layerGroup().addTo(mapa);
   var camadaGps = L.layerGroup().addTo(mapa);
 
+  /* amarelo = falta; verde = conferido; VERMELHO = precisa voltar (vence o verde) */
   function estiloLote(item) {
     var ok = N.conferido(E.marcas, item);
     var sel = E.selecionado && E.selecionado.chave === item.chave;
-    var cor = ok ? '#00a843' : '#ffd600', volta = retornoDe(item);
+    var volta = voltaDe(item);
+    var cor = volta ? VERMELHO : ok ? '#00a843' : '#ffd600';
     return {
-      renderer: desenhista, color: sel ? '#ff5a00' : volta ? '#e53935' : cor, weight: sel ? 5 : volta ? 4 : 3, opacity: 1,
-      dashArray: volta && !sel ? '9 6' : null, fillColor: cor, fillOpacity: ok ? 0.22 : 0.10,
+      renderer: desenhista, color: sel ? '#ff5a00' : cor, weight: sel ? 5 : volta ? 4 : 3, opacity: 1,
+      fillColor: cor, fillOpacity: volta ? 0.3 : ok ? 0.22 : 0.10,
     };
   }
   function estiloPonto(item) {
     var ok = N.conferido(E.marcas, item);
-    var volta = retornoDe(item);
-    return { renderer: desenhista, radius: volta ? 7 : 6, color: volta ? '#e53935' : '#111', weight: volta ? 3 : 1.5, fillColor: ok ? '#00a843' : '#ffd600', fillOpacity: 1 };
+    var volta = voltaDe(item);
+    return { renderer: desenhista, radius: volta ? 7 : 6, color: volta ? '#7f0000' : '#111', weight: volta ? 2 : 1.5,
+      fillColor: volta ? VERMELHO : ok ? '#00a843' : '#ffd600', fillOpacity: 1 };
   }
   function iconeNumero(item) {
     var ok = N.conferido(E.marcas, item);
@@ -5181,7 +5420,7 @@ window.LOGO_CAROA = { dados: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD
     var texto = n2(item.n);
     var largura = Math.max(30, 12 + texto.length * 8);
     return L.divIcon({
-      className: 'num' + (ok ? ' ok' : '') + (sel ? ' sel' : '') + (retornoDe(item) ? ' retorno' : ''), html: esc(texto),
+      className: 'num' + (ok ? ' ok' : '') + (sel ? ' sel' : '') + (voltaDe(item) ? ' voltar' : ''), html: esc(texto),
       iconSize: [largura, 30], iconAnchor: [largura / 2, 15],
     });
   }
@@ -5261,7 +5500,8 @@ window.LOGO_CAROA = { dados: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD
     var c = $('contador');
     if (!E.atual) { c.hidden = true; return; }
     var feitos = E.atual.itens.filter(function (i) { return N.conferido(E.marcas, i); }).length;
-    c.textContent = feitos + ' de ' + E.atual.itens.length + ' ✓';
+    var voltar = E.atual.itens.filter(function (i) { return voltaDe(i); }).length;
+    c.textContent = feitos + ' de ' + E.atual.itens.length + ' ✓' + (voltar ? ' · ' + voltar + ' ↩' : '');
     c.hidden = false;
   }
 
@@ -5616,8 +5856,9 @@ window.LOGO_CAROA = { dados: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD
     var ok = N.conferido(E.marcas, item);
     var marca = E.marcas.get(item.chave);
     var num = $('c-num');
+    var volta = voltaDe(item);
     num.textContent = n2(item.n);
-    num.className = 'num-grande' + (ok ? ' ok' : '');
+    num.className = 'num-grande' + (volta ? ' voltar' : ok ? ' ok' : '');
     $('c-lote').textContent = item.numero ? 'Lote ' + N.numeroParaMostrar(item.numero) : (item.nome || 'Lote sem número');
     $('c-origem').textContent = item.origem || (item.descricao || '');
     var bt = $('c-conferir');
@@ -5631,11 +5872,15 @@ window.LOGO_CAROA = { dados: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD
       if (document.activeElement !== $('c-obs')) $('c-obs').value = marca.obs || '';
     }
     if (window.FichaUI) FichaUI.atualizarBotaoDoCartao(item);
-    var volta = retornoDe(item);
     $('c-retorno').hidden = !volta;
     if (volta) {
-      $('c-retorno').textContent = '↩ Retorno a campo' + (volta.conferido_por ? ', pedido por ' + volta.conferido_por : '') +
-        (volta.observacao ? ': ' + volta.observacao : '');
+      var motivos = [];
+      if (volta.ficha) motivos.push('↩ Voltar: imóvel fechado ou sem informante (ficha nº ' + (volta.ficha.dados.numero_ficha || '–') + ')');
+      if (volta.escritorio) {
+        motivos.push('↩ Retorno a campo' + (volta.escritorio.conferido_por ? ', pedido por ' + volta.escritorio.conferido_por : '') +
+          (volta.escritorio.observacao ? ': ' + volta.escritorio.observacao : ''));
+      }
+      $('c-retorno').textContent = motivos.join('\n');
     }
     $('cartao').hidden = false;
     atualizarDistancia();
@@ -5774,11 +6019,12 @@ window.LOGO_CAROA = { dados: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD
     if (!E.atual) { ol.innerHTML = '<li class="vazia">Nenhum mapa aberto.</li>'; return; }
     var itens = E.atual.itens;
     var feitos = itens.filter(function (i) { return N.conferido(E.marcas, i); });
+    var voltar = itens.filter(function (i) { return voltaDe(i); });
     var botoes = document.querySelectorAll('#l-filtros button[data-f]');
     Array.prototype.forEach.call(botoes, function (b) {
       var f = b.getAttribute('data-f');
-      var n = f === 'faltam' ? itens.length - feitos.length : f === 'feitos' ? feitos.length : itens.length;
-      b.textContent = (f === 'faltam' ? 'Faltam' : f === 'feitos' ? 'Conferidos' : 'Todos') + ' (' + n + ')';
+      var n = f === 'faltam' ? itens.length - feitos.length : f === 'feitos' ? feitos.length : f === 'voltar' ? voltar.length : itens.length;
+      b.textContent = (f === 'faltam' ? 'Faltam' : f === 'feitos' ? 'Conferidos' : f === 'voltar' ? 'Voltar' : 'Todos') + ' (' + n + ')';
       b.classList.toggle('ativo', f === E.filtro);
     });
     var g = gpsRecente();
@@ -5786,17 +6032,19 @@ window.LOGO_CAROA = { dados: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD
     ordem.classList.toggle('ativo', E.ordem === 'perto');
     ordem.hidden = !g;
     var lista = itens.filter(function (i) {
+      if (E.filtro === 'voltar') return !!voltaDe(i);
       var ok = N.conferido(E.marcas, i);
       return E.filtro === 'todos' || (E.filtro === 'feitos' ? ok : !ok);
     }).map(function (i) { return { item: i, d: g ? N.distanciaM(g.lat, g.lon, i.lat, i.lon) : null }; });
     if (E.ordem === 'perto' && g) lista.sort(function (a, b) { return a.d - b.d; });
     if (!lista.length) {
-      ol.innerHTML = '<li class="vazia">' + (E.filtro === 'faltam' ? 'Nada falta: todos conferidos.' : 'Nenhum lote aqui.') + '</li>';
+      ol.innerHTML = '<li class="vazia">' + (E.filtro === 'faltam' ? 'Nada falta: todos conferidos.' :
+        E.filtro === 'voltar' ? 'Nenhum lote para voltar.' : 'Nenhum lote aqui.') + '</li>';
       return;
     }
     ol.innerHTML = lista.slice(0, 2000).map(function (x) {
       var i = x.item, m = E.marcas.get(i.chave), f = window.FichaUI && FichaUI.fichaDe(i);
-      return '<li data-k="' + esc(i.chave) + '"><span class="num-p' + (m ? ' ok' : '') + '">' + n2(i.n) + '</span>' +
+      return '<li data-k="' + esc(i.chave) + '"><span class="num-p' + (voltaDe(i) ? ' voltar' : m ? ' ok' : '') + '">' + n2(i.n) + '</span>' +
         '<span class="meio"><span class="t1">' + esc(i.numero ? 'Lote ' + N.numeroParaMostrar(i.numero) : (i.nome || 'sem número')) + '</span>' +
         '<span class="t2">' + esc((i.origem || '') + (f ? ' · 📝 ficha nº ' + (f.dados.numero_ficha || '–') + (f.levantamento ? ' · 📐' : '') : '')) + '</span></span>' +
         '<span class="dir">' + (m ? '✓ ' + N.horaLocal(m.em) + '<br>' : '') + esc(x.d != null ? N.formatarDistancia(x.d) : '') + '</span></li>';
@@ -6386,6 +6634,8 @@ window.LOGO_CAROA = { dados: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD
         aviso: aviso, dialogo: dialogo, mostrarProgresso: mostrarProgresso, esconderProgresso: esconderProgresso,
         respirar: respirar, entregarArquivo: entregarArquivo, abrirPainel: abrirPainel, fecharPaineis: fecharPaineis,
         selecionar: selecionar, fecharCartao: fecharCartao, gpsRecente: gpsRecente, mapaDoLote: mapaDoLote,
+        // 1.6: tirar a ficha apagada e redesenhar o lote que mudou
+        apagarChave: apagarChave, redesenharChaves: redesenharChaves,
       });
     }).then(function () {
       return Promise.all([lerPref('nome'), lerTudo('conjuntos'), lerTudo('marcas'), lerPref('ultimo'),
